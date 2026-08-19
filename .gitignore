@@ -1,1 +1,3 @@
 .plum
+__pycache__/
+*.pyc
