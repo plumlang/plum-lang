@@ -81,12 +81,13 @@ class Lexer:
 
     def _number(self) -> Token:
         start = self.position
-        while(
+
+        while (
             self.position < len(self.source)
             and self.source[self.position].isdigit()
-        ):
+        ):  
             self.position += 1
 
             value = self.source[start:self.position]
-            return Token(TokenType.NUMBER, value, self.line)
-            
+
+        return Token(TokenType.NUMBER, value, self.line)

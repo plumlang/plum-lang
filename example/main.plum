@@ -1,0 +1,3 @@
+drop 42
+drop "Hello World subhro"
+drop 20 + 20
