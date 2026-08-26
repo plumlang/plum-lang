@@ -3,6 +3,6 @@ from .ast import (
     Program,
     PrintStatement,
     NumberLiteral,
-    StringLitral,
+    StringLiteral,
     BinaryOperation,
 )

@@ -20,7 +20,7 @@ class NumberLiteral(ASTNode):
     """A number like 42 or 3.14"""
     value: float
 @dataclass
-class StringLitral(ASTNode):
+class StringLiteral(ASTNode):
      """A string like "hello" """
      value: str
 @dataclass 
