@@ -31,11 +31,42 @@ class Lexer:
             if current.isdigit():
                 self.tokens.append(self._number())
                 continue
-            if current == "+":
+
+            # plus
+            if current == '+':
                 self.tokens.append(Token(TokenType.PLUS, '+', self.line))
                 self.position += 1
                 continue
-          
+            
+            # minus  (new v.0.3)
+            if current == '-':
+                self.tokens.append(Token(TokenType.MINUS, '-', self.line))
+                self.position += 1
+                continue
+
+            # multiple (new v.0.3)
+            if current == '*':
+                self.tokens.append(Token(TokenType.STAR, '*', self.line))
+                self.position += 1
+                continue
+            
+            # division (new v.0.3)
+            if current == '/':
+                self.tokens.append(Token(TokenType.SLASH, '/', self.line))
+                self.position += 1
+                continue
+
+            # left paren 
+            if current == '(':
+                self.tokens.append(Token(TokenType.LEFT_PAREN, '(', self.line))
+                self.position += 1
+                continue
+
+            # right paren 
+            if current == ')':
+                self.tokens.append(Token(TokenType.RIGHT_PAREN, ')', self.line))
+                self.position += 1
+                continue
 
             if current.isalpha():
                self.tokens.append(self._identifier())
@@ -88,6 +119,16 @@ class Lexer:
         ):  
             self.position += 1
 
-            value = self.source[start:self.position]
+        # Handle decimal points (e.g., 3.14)
+        if (self.position < len(self.source) 
+            and self.source[self.position] == '.' 
+            and self.position + 1 < len(self.source)
+            and self.source[self.position + 1].isdigit()):
+            
+            self.position += 1  # skip the '.'
+            while (self.position < len(self.source) 
+                   and self.source[self.position].isdigit()):
+                self.position += 1
 
+        value = self.source[start:self.position]  # ✅ Fixed: moved outside loop
         return Token(TokenType.NUMBER, value, self.line)

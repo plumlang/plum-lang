@@ -1,3 +1,5 @@
-drop 42
-drop "Hello World subhro"
-drop 20 + 20
+drop 5 + 3
+drop 10 - 4
+drop 6 * 7
+drop 20 / 5
+drop 10 + 5 * 2

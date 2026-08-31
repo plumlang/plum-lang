@@ -1,5 +1,4 @@
 from typing import List
-
 from plum.lexer import Token, TokenType
 from plum.plum_ast import *
 
@@ -22,14 +21,12 @@ class Parser:
         """Check if current token is of given type"""
         if self._is_at_end():
             return False
-
         return self._peek().type == token_type
 
     def _advance(self) -> Token:
         """Consume current token and return it"""
         if not self._is_at_end():
             self.current += 1
-
         return self._previous()
 
     # Helper method for token manipulation
@@ -41,15 +38,26 @@ class Parser:
             if self._check(token_type):
                 self._advance()
                 return True
-
         return False
 
     def _is_at_end(self) -> bool:
         """Check if we've consumed all tokens"""
         return self._peek().type == TokenType.EOF
 
+    def _consume(self, token_type: TokenType, message: str) -> Token:
+        """Consume a token of the expected type or throw an error"""
+        if self._check(token_type):
+            return self._advance()
+        raise SyntaxError(f"{message} at line {self._peek().line}")
+
     def _primary(self) -> ASTNode:
-        """Parse primary expressions (numbers, strings, etc.)"""
+        """Parse primary expressions (numbers, strings, parentheses)"""
+
+        # Handle Parentheses
+        if self._match(TokenType.LEFT_PAREN):
+            expr = self._expression()
+            self._consume(TokenType.RIGHT_PAREN, "Expected ')' after expression")
+            return expr
 
         if self._match(TokenType.NUMBER):
             return NumberLiteral(float(self._previous().value))
@@ -62,24 +70,36 @@ class Parser:
             f"at line {self._peek().line}"
         )
 
-    def _addition(self) -> ASTNode:
-        """Parse addition expressions."""
-
+    def _multiplication(self) -> ASTNode:
+        """
+        Parse * and / (higher precedence)
+        Example: 10 * 5 / 2
+        """
         left = self._primary()
-
-        while self._match(TokenType.PLUS):
+        
+        while self._match(TokenType.STAR, TokenType.SLASH):
+            operator = self._previous().value
             right = self._primary()
+            left = BinaryOperation(left, operator, right)
+        
+        return left
 
-            left = BinaryOperation(
-                left=left,
-                operator="+",
-                right=right
-            )
-
+    def _addition(self) -> ASTNode:
+        """
+        Parse + and - (lower precedence)
+        Example: 5 + 3 - 2
+        """
+        left = self._multiplication()  # FIXED: Call _multiplication() not _primary()
+        
+        while self._match(TokenType.PLUS, TokenType.MINUS):
+            operator = self._previous().value
+            right = self._multiplication()  # FIXED: Call _multiplication() not _primary()
+            left = BinaryOperation(left, operator, right)
+        
         return left
 
     def _expression(self) -> ASTNode:
-        """Parse an expression with + operator"""
+        """Parse an expression"""
         return self._addition()
 
     def _print_statement(self) -> PrintStatement:

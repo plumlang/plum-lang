@@ -9,3 +9,8 @@ class TokenType(Enum):
     NUMBER = auto() # int and float value;
     PLUS = auto() # +
     MINUS = auto() # -
+    STAR = auto()
+    SLASH = auto()
+
+    LEFT_PAREN = auto()
+    RIGHT_PAREN = auto()

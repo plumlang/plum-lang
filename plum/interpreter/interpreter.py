@@ -30,8 +30,17 @@ class Interpreter:
             left_val = self._evaluate(node.left)
             right_val = self._evaluate(node.right)
 
+            # Handle all arithmetic operators
             if node.operator == '+':
                 return left_val + right_val
+            elif node.operator == '-':      # NEW: Subtraction
+                return left_val - right_val
+            elif node.operator == '*':      # NEW: Multiplication
+                return left_val * right_val
+            elif node.operator == '/':      # NEW: Division
+                if right_val == 0:
+                    raise RuntimeError("Division by zero!")
+                return left_val / right_val
             else:
                 raise RuntimeError(
                     f"Unknown operator: {node.operator}"
