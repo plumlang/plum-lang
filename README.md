@@ -8,6 +8,7 @@ Plum is a toy programming language created to understand how real programming la
 
 ## Current Version
 
+- v0.4 — Extended Operators & Booleans ✅
 - v0.3 — Full Arithmetic Support ✅
 - v0.2 — Parser & Interpreter ✅
 - v0.1 — Lexer ✅
@@ -15,13 +16,27 @@ Plum is a toy programming language created to understand how real programming la
 ## Documentation
 
 - [v0.1](docs/v0.1.md) — Lexer
-- [v0.2](docs/v0.2.md) — Parser & Interpreter (Basic)
+- [v0.2](docs/v0.2.md) — Parser & Interpreter
 - [v0.3](docs/v0.3.md) — Full Arithmetic Support
+- v0.4 — Extended Operators & Booleans
 - Roadmap (coming soon)
 
 ## Features
 
+### v0.4 — Extended Operators & Booleans
+
+- ➗ Modulo `%`
+- 🔢 Floor division `//`
+- ⚡ Power `**`
+- ⚖️ Comparison operators: `==`, `!=`, `>`, `<`, `>=`, `<=`
+- 🟢 `good` boolean value
+- 🔴 `bad` boolean value
+- 📐 Extended operator precedence
+- 🔄 Parentheses support
+- 🛡️ Division-by-zero protection
+
 ### v0.3 — Full Arithmetic Support
+
 - ➕ Complete arithmetic operators: `+`, `-`, `*`, `/`
 - 📐 Operator precedence (PEMDAS)
 - 🔄 Parentheses support
@@ -29,6 +44,7 @@ Plum is a toy programming language created to understand how real programming la
 - 🛡️ Division by zero protection
 
 ### v0.2 — Parser & Interpreter
+
 - 🌳 Abstract Syntax Tree (AST)
 - 📝 Recursive descent parser
 - 🏃 Tree-walking interpreter
@@ -36,6 +52,7 @@ Plum is a toy programming language created to understand how real programming la
 - 📦 `drop` statement for output
 
 ### v0.1 — Lexer
+
 - 🔤 Tokenization
 - 📝 String literals
 - 🗝️ `drop` keyword
