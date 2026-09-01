@@ -12,5 +12,10 @@ class TokenType(Enum):
     STAR = auto()
     SLASH = auto()
 
+    #v3  
+    PERCENT = auto()       # %
+    DOUBLE_SLASH = auto()  # //
+    POWER = auto()         # **
+
     LEFT_PAREN = auto()
     RIGHT_PAREN = auto()

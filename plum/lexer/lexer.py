@@ -32,27 +32,41 @@ class Lexer:
                 self.tokens.append(self._number())
                 continue
 
-            # plus
+            # Addition operator (+)
             if current == '+':
                 self.tokens.append(Token(TokenType.PLUS, '+', self.line))
                 self.position += 1
                 continue
-            
-            # minus  (new v.0.3)
+
+            # Subtraction operator (-)
             if current == '-':
                 self.tokens.append(Token(TokenType.MINUS, '-', self.line))
                 self.position += 1
                 continue
 
-            # multiple (new v.0.3)
+            # Multiplication (*) and Power (**)
             if current == '*':
-                self.tokens.append(Token(TokenType.STAR, '*', self.line))
-                self.position += 1
+                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '*':
+                    self.tokens.append(Token(TokenType.POWER, '**', self.line))
+                    self.position += 2
+                else:
+                    self.tokens.append(Token(TokenType.STAR, '*', self.line))
+                    self.position += 1
                 continue
-            
-            # division (new v.0.3)
+
+            # Division (/) and Floor Division (//)
             if current == '/':
-                self.tokens.append(Token(TokenType.SLASH, '/', self.line))
+                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '/':
+                    self.tokens.append(Token(TokenType.DOUBLE_SLASH, '//', self.line))
+                    self.position += 2
+                else:
+                    self.tokens.append(Token(TokenType.SLASH, '/', self.line))
+                    self.position += 1
+                continue
+
+            # Modulo operator (%)
+            if current == '%':
+                self.tokens.append(Token(TokenType.PERCENT, '%', self.line))
                 self.position += 1
                 continue
 
