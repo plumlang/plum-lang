@@ -12,5 +12,21 @@ class TokenType(Enum):
     STAR = auto()
     SLASH = auto()
 
+    #v3  
+    PERCENT = auto()       # %
+    DOUBLE_SLASH = auto()  # //
+    POWER = auto()         # **
+
     LEFT_PAREN = auto()
     RIGHT_PAREN = auto()
+
+    # v0.4 - Comparison operators
+    EQUAL_EQUAL = auto()    # ==
+    NOT_EQUAL = auto()      # !=
+    GREATER = auto()        # >
+    LESS = auto()           # <
+    GREATER_EQUAL = auto()  # >=
+    LESS_EQUAL = auto()     # <=
+    # v0.4 - Boolean values
+    GOOD = auto()   # true
+    BAD = auto()    # false

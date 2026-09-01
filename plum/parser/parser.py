@@ -65,23 +65,60 @@ class Parser:
         if self._match(TokenType.STRING):
             return StringLiteral(self._previous().value)
 
+        if self._match(TokenType.GOOD):
+          return BooleanLiteral(True)
+
+        if self._match(TokenType.BAD):
+            return BooleanLiteral(False)
+
         raise SyntaxError(
             f"Unexpected token: {self._peek().value} "
             f"at line {self._peek().line}"
         )
 
-    def _multiplication(self) -> ASTNode:
-        """
-        Parse * and / (higher precedence)
-        Example: 10 * 5 / 2
-        """
+    def _power(self) -> ASTNode:
+        """Parse the power operator (**)."""
         left = self._primary()
-        
-        while self._match(TokenType.STAR, TokenType.SLASH):
+
+        while self._match(TokenType.POWER):
             operator = self._previous().value
             right = self._primary()
             left = BinaryOperation(left, operator, right)
-        
+
+        return left
+
+    def _multiplication(self) -> ASTNode:
+        """Parse *, /, %, and //"""
+        left = self._power()
+
+        while self._match(
+            TokenType.STAR,
+            TokenType.SLASH,
+            TokenType.PERCENT,
+            TokenType.DOUBLE_SLASH
+        ):
+            operator = self._previous().value
+            right = self._power()
+            left = BinaryOperation(left, operator, right)
+
+        return left
+
+    def _comparison(self) -> ASTNode:
+        """Parse comparison operators."""
+        left = self._addition()
+
+        while self._match(
+            TokenType.EQUAL_EQUAL,
+            TokenType.NOT_EQUAL,
+            TokenType.GREATER,
+            TokenType.LESS,
+            TokenType.GREATER_EQUAL,
+            TokenType.LESS_EQUAL
+        ):
+            operator = self._previous().value
+            right = self._addition()
+            left = BinaryOperation(left, operator, right)
+
         return left
 
     def _addition(self) -> ASTNode:
@@ -99,9 +136,9 @@ class Parser:
         return left
 
     def _expression(self) -> ASTNode:
-        """Parse an expression"""
-        return self._addition()
-
+         """Parse an expression"""
+         return self._comparison()
+   
     def _print_statement(self) -> PrintStatement:
         """Parse 'drop <expression>'"""
         expr = self._expression()

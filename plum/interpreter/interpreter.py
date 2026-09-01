@@ -21,6 +21,10 @@ class Interpreter:
         elif isinstance(node, NumberLiteral):
             return node.value
 
+        # Boolean literal
+        elif isinstance(node, BooleanLiteral):
+            return node.value
+
         # String literal
         elif isinstance(node, StringLiteral):
             return node.value
@@ -41,6 +45,28 @@ class Interpreter:
                 if right_val == 0:
                     raise RuntimeError("Division by zero!")
                 return left_val / right_val
+            elif node.operator == '%':
+                if right_val == 0:
+                    raise RuntimeError("Division by zero!")
+                return left_val % right_val
+            elif node.operator == '//':
+                if right_val == 0:
+                    raise RuntimeError("Division by zero!")
+                return left_val // right_val
+            elif node.operator == '**':
+                return left_val ** right_val
+            elif node.operator == '==':
+                return left_val == right_val
+            elif node.operator == '!=':
+                return left_val != right_val
+            elif node.operator == '>':
+                return left_val > right_val
+            elif node.operator == '<':
+                return left_val < right_val
+            elif node.operator == '>=':
+                return left_val >= right_val
+            elif node.operator == '<=':
+                return left_val <= right_val
             else:
                 raise RuntimeError(
                     f"Unknown operator: {node.operator}"
