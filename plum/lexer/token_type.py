@@ -19,3 +19,4 @@ class TokenType(Enum):
 
     LEFT_PAREN = auto()
     RIGHT_PAREN = auto()
+

@@ -70,19 +70,33 @@ class Parser:
             f"at line {self._peek().line}"
         )
 
-    def _multiplication(self) -> ASTNode:
-        """
-        Parse * and / (higher precedence)
-        Example: 10 * 5 / 2
-        """
+    def _power(self) -> ASTNode:
+        """Parse the power operator (**)."""
         left = self._primary()
-        
-        while self._match(TokenType.STAR, TokenType.SLASH):
+
+        while self._match(TokenType.POWER):
             operator = self._previous().value
             right = self._primary()
             left = BinaryOperation(left, operator, right)
-        
+
         return left
+
+    def _multiplication(self) -> ASTNode:
+        """Parse *, /, %, and //"""
+        left = self._power()
+
+        while self._match(
+            TokenType.STAR,
+            TokenType.SLASH,
+            TokenType.PERCENT,
+            TokenType.DOUBLE_SLASH
+        ):
+            operator = self._previous().value
+            right = self._power()
+            left = BinaryOperation(left, operator, right)
+
+        return left
+
 
     def _addition(self) -> ASTNode:
         """
