@@ -20,3 +20,10 @@ class TokenType(Enum):
     LEFT_PAREN = auto()
     RIGHT_PAREN = auto()
 
+    # v0.4 - Comparison operators
+    EQUAL_EQUAL = auto()    # ==
+    NOT_EQUAL = auto()      # !=
+    GREATER = auto()        # >
+    LESS = auto()           # <
+    GREATER_EQUAL = auto()  # >=
+    LESS_EQUAL = auto()     # <=

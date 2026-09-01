@@ -51,6 +51,18 @@ class Interpreter:
                 return left_val // right_val
             elif node.operator == '**':
                 return left_val ** right_val
+            elif node.operator == '==':
+                return left_val == right_val
+            elif node.operator == '!=':
+                return left_val != right_val
+            elif node.operator == '>':
+                return left_val > right_val
+            elif node.operator == '<':
+                return left_val < right_val
+            elif node.operator == '>=':
+                return left_val >= right_val
+            elif node.operator == '<=':
+                return left_val <= right_val
             else:
                 raise RuntimeError(
                     f"Unknown operator: {node.operator}"

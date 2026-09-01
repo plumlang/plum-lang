@@ -32,6 +32,17 @@ class Lexer:
                 self.tokens.append(self._number())
                 continue
 
+            # Equality and assignment operators
+            if current == '=':
+                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
+                    self.tokens.append(Token(TokenType.EQUAL_EQUAL, '==', self.line))
+                    self.position += 2
+                    continue
+                else:
+                    raise SyntaxError(
+                        f"Unexpected character '=' on line {self.line}"
+                  )
+
             # Addition operator (+)
             if current == '+':
                 self.tokens.append(Token(TokenType.PLUS, '+', self.line))
@@ -69,6 +80,37 @@ class Lexer:
                 self.tokens.append(Token(TokenType.PERCENT, '%', self.line))
                 self.position += 1
                 continue
+
+            # Not equal operator (!=)
+            if current == '!':
+                 if self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
+                     self.tokens.append(Token(TokenType.NOT_EQUAL, '!=', self.line))
+                     self.position += 2
+                     continue
+                 else:
+                   raise SyntaxError(
+                         f"Unexpected character '!' on line {self.line}"
+                          )
+
+            # Greater than and greater than or equal
+            if current == '>':
+                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
+                    self.tokens.append(Token(TokenType.GREATER_EQUAL, '>=', self.line))
+                    self.position += 2
+                else:
+                    self.tokens.append(Token(TokenType.GREATER, '>', self.line))
+                    self.position += 1
+                continue
+
+            # Less than and less than or equal
+            if current == '<':
+                 if self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
+                     self.tokens.append(Token(TokenType.LESS_EQUAL, '<=', self.line))
+                     self.position += 2
+                 else:
+                     self.tokens.append(Token(TokenType.LESS, '<', self.line))
+                     self.position += 1
+                 continue
 
             # left paren 
             if current == '(':

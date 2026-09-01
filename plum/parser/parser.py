@@ -97,6 +97,23 @@ class Parser:
 
         return left
 
+    def _comparison(self) -> ASTNode:
+        """Parse comparison operators."""
+        left = self._addition()
+
+        while self._match(
+            TokenType.EQUAL_EQUAL,
+            TokenType.NOT_EQUAL,
+            TokenType.GREATER,
+            TokenType.LESS,
+            TokenType.GREATER_EQUAL,
+            TokenType.LESS_EQUAL
+        ):
+            operator = self._previous().value
+            right = self._addition()
+            left = BinaryOperation(left, operator, right)
+
+        return left
 
     def _addition(self) -> ASTNode:
         """
@@ -113,9 +130,9 @@ class Parser:
         return left
 
     def _expression(self) -> ASTNode:
-        """Parse an expression"""
-        return self._addition()
-
+         """Parse an expression"""
+         return self._comparison()
+   
     def _print_statement(self) -> PrintStatement:
         """Parse 'drop <expression>'"""
         expr = self._expression()
