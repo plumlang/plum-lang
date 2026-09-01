@@ -159,9 +159,18 @@ class Lexer:
             and self.source[self.position].isalpha()
         ):
             self.position += 1
+
         value = self.source[start: self.position]
+
         if value == 'drop':
-            return Token(TokenType.DROP,value, self.line)
+            return Token(TokenType.DROP, value, self.line)
+
+        if value == 'good':
+            return Token(TokenType.GOOD, value, self.line)
+
+        if value == 'bad':
+            return Token(TokenType.BAD, value, self.line)
+
         raise SyntaxError(
             f"Unknown Keyword '{value}' on line {self.line} "
         )

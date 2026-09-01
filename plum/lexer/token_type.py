@@ -27,3 +27,6 @@ class TokenType(Enum):
     LESS = auto()           # <
     GREATER_EQUAL = auto()  # >=
     LESS_EQUAL = auto()     # <=
+    # v0.4 - Boolean values
+    GOOD = auto()   # true
+    BAD = auto()    # false

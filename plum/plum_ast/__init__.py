@@ -4,5 +4,6 @@ from .ast import (
     PrintStatement,
     NumberLiteral,
     StringLiteral,
+    BooleanLiteral,
     BinaryOperation,
 )

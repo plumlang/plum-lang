@@ -65,6 +65,12 @@ class Parser:
         if self._match(TokenType.STRING):
             return StringLiteral(self._previous().value)
 
+        if self._match(TokenType.GOOD):
+          return BooleanLiteral(True)
+
+        if self._match(TokenType.BAD):
+            return BooleanLiteral(False)
+
         raise SyntaxError(
             f"Unexpected token: {self._peek().value} "
             f"at line {self._peek().line}"

@@ -21,6 +21,10 @@ class Interpreter:
         elif isinstance(node, NumberLiteral):
             return node.value
 
+        # Boolean literal
+        elif isinstance(node, BooleanLiteral):
+            return node.value
+
         # String literal
         elif isinstance(node, StringLiteral):
             return node.value

@@ -20,6 +20,11 @@ class NumberLiteral(ASTNode):
     """A number like 42 or 3.14"""
     value: float
 @dataclass
+class BooleanLiteral(ASTNode):
+    """A boolean value: good or bad"""
+    value: bool
+    
+@dataclass
 class StringLiteral(ASTNode):
      """A string like "hello" """
      value: str
