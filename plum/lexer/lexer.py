@@ -149,6 +149,19 @@ class Lexer:
                 self.position += 1
                 continue
 
+            # New: v0.5 (sk) equal sign for assignment
+            if current == '=':
+                #check if it's == (comparison) or = (assignment)
+                if (self.position + 1 < len(self.source) and self.source[self.position + 1] == '='):
+                    # It's == 
+                    self.tokens.append(Token(TokenType.EQUAL_EQUAL, '==', self.line))
+                    self.position += 2
+                else: 
+                    # It's = 
+                    self.tokens.append(Token(TokenType.EQUALS, '=', self.line))
+                    self.position += 1
+                continue
+
             if current.isalpha():
                self.tokens.append(self._identifier())
                continue
@@ -179,26 +192,46 @@ class Lexer:
 
     def _identifier(self) -> Token:
         start = self.position
-        while (
-            self.position < len(self.source)
-            and self.source[self.position].isalpha()
-        ):
+        while ( self.position < len(self.source) and (self.source[self.position].isalnum or self.source[self.position] == '_') 
+            ):
             self.position += 1
 
         value = self.source[start: self.position]
 
+        # v0.1 keywords
         if value == 'drop':
             return Token(TokenType.DROP, value, self.line)
-
+        # v0.4 boolean keyword
         if value == 'good':
             return Token(TokenType.GOOD, value, self.line)
 
         if value == 'bad':
             return Token(TokenType.BAD, value, self.line)
+        
+        #v0.5 variable keyword
+        if value == 'plant':
+            return Token(TokenType.PLANT, value, self.line)
+        
+        if value == 'root':
+            return Token(TokenType.ROOT, value, self.line)
+        
+        #v0.5 type keyword
 
-        raise SyntaxError(
-            f"Unknown Keyword '{value}' on line {self.line} "
-        )
+        if value == 'int':
+           return Token(TokenType.INT, value, self.line)
+        
+        if value == 'str':
+            return Token(TokenType.STR, value, self.line)
+        
+        if value == 'bool':
+            return Token(TokenType.BOOL, value, self.line)
+        
+        if value == 'float':
+            return TokenType(TokenType.FLOAT, value, self.line)
+        
+        # if not a keyword, it's a variable name (IDENTIFIER)
+        return Token(TokenType.IDENTIFIER, value, self.line)
+
 
     def _number(self) -> Token:
         start = self.position

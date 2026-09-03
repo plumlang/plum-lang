@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional, Any
 
 class ASTNode:
      """Base class for all AST nodes"""
@@ -34,3 +34,21 @@ class BinaryOperation(ASTNode):
     left: ASTNode 
     operator: str 
     right: ASTNode
+
+@dataclass
+class VariableDeclaration(ASTNode):
+     """Variable declaration: plant int x = 5 or root int x = 5"""
+     mutable: bool
+     var_type: str
+     name: str
+     value: Optional[ASTNode] = None
+@dataclass
+class VariableReference(ASTNode):
+     """Reference to a variable: x"""
+     name: str
+
+@dataclass
+class Assignment(ASTNode):
+     """Variable assignment: x = 10 (only for mutable variables)"""
+     name: str
+     value: ASTNode
