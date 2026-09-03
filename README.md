@@ -18,7 +18,7 @@ Plum is a toy programming language created to understand how real programming la
 - [v0.1](docs/v0.1.md) — Lexer
 - [v0.2](docs/v0.2.md) — Parser & Interpreter
 - [v0.3](docs/v0.3.md) — Full Arithmetic Support
-- v0.4 — Extended Operators & Booleans
+- [v0.4](docs/v0.4.md) — Extended Operators & Booleans
 - Roadmap (coming soon)
 
 ## Features
