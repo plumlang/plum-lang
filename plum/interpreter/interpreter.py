@@ -13,10 +13,15 @@ class Interpreter:
 
         # Print statement
         if isinstance(node, PrintStatement):
-            value = self._evaluate(node.expression)
-            print(value)
-            return value
+          value = self._evaluate(node.expression)
 
+          if isinstance(value, bool):
+              print("good" if value else "bad")
+          else:
+               print(value)
+
+          return value
+        
         # Number literal
         elif isinstance(node, NumberLiteral):
             return node.value
