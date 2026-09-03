@@ -49,11 +49,36 @@ class Lexer:
                 self.position += 1
                 continue
 
+            # Comments (--)
+            if current == '-' and self.position + 1 < len(self.source) and self.source[self.position + 1] == '-':
+                self.position += 2  # skip opening --
+
+                while self.position < len(self.source):
+                    if (
+                        self.source[self.position] == '-'
+                        and self.position + 1 < len(self.source)
+                        and self.source[self.position + 1] == '-'
+                    ):
+                        self.position += 2  # skip closing --
+                        break
+
+                    if self.source[self.position] == '\n':
+                        self.line += 1
+
+                    self.position += 1
+                else:
+                    raise SyntaxError(
+                        f"Unterminated comment on line {self.line}"
+                    )
+
+
+                continue
+
             # Subtraction operator (-)
             if current == '-':
-                self.tokens.append(Token(TokenType.MINUS, '-', self.line))
-                self.position += 1
-                continue
+               self.tokens.append(Token(TokenType.MINUS, '-', self.line))
+               self.position += 1
+               continue
 
             # Multiplication (*) and Power (**)
             if current == '*':

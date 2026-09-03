@@ -1,20 +1,8 @@
-drop 5 + 3
-drop 10 - 4
-drop 6 * 7
-drop 20 / 5
-drop 10 % 3
-drop 10 // 3
-drop 2 ** 3
+--aaa--
+drop 10 + 5
+--bbb--
 
-drop 2 + 3 * 4
-drop (2 + 3) * 4
+//bbjj//
 
-drop 10 == 10
-drop 10 != 5
-drop 10 > 5
-drop 10 < 20
-drop 10 >= 10
-drop 10 <= 20
-
-drop good
-drop bad
+--jj       njkn ij 
+bin - jbb -- jblj
