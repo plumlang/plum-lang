@@ -6,4 +6,7 @@ from .ast import (
     StringLiteral,
     BooleanLiteral,
     BinaryOperation,
+    VariableDeclaration,
+    VariableReference,
+    Assignment
 )

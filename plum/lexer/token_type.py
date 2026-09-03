@@ -30,3 +30,15 @@ class TokenType(Enum):
  
     GOOD = auto()   # true
     BAD = auto()    # false
+
+    #v0.5 - keyword variables 
+    PLANT = auto(); # mutable variables keyword
+    ROOT = auto();  # immutable variable keyword
+    INT = auto();
+    STR = auto();
+    BOOL = auto();
+    FLOAT = auto();
+    EQUALS = auto(); # = assignment
+    IDENTIFIER = auto(); # variable names
+    
+

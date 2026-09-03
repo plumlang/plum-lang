@@ -51,30 +51,73 @@ class Parser:
         raise SyntaxError(f"{message} at line {self._peek().line}")
 
     def _primary(self) -> ASTNode:
-        """Parse primary expressions (numbers, strings, parentheses)"""
+        """Parse primary expressions (numbers, strings, parentheses, variables)"""
 
         # Handle Parentheses
         if self._match(TokenType.LEFT_PAREN):
             expr = self._expression()
             self._consume(TokenType.RIGHT_PAREN, "Expected ')' after expression")
             return expr
+        # number literal
 
         if self._match(TokenType.NUMBER):
             return NumberLiteral(float(self._previous().value))
-
+        # String Literal
         if self._match(TokenType.STRING):
             return StringLiteral(self._previous().value)
 
+        # bool literal
         if self._match(TokenType.GOOD):
           return BooleanLiteral(True)
 
         if self._match(TokenType.BAD):
             return BooleanLiteral(False)
+        # New: v0.5 Variable reference (IDENTIFER)
+        if self._match(TokenType.IDENTIFIER):
+            return _variable_declaration(self._previous().value)
 
         raise SyntaxError(
             f"Unexpected token: {self._peek().value} "
             f"at line {self._peek().line}"
         )
+    
+
+    # variable declaration (sk-v0.5)
+    def _variable_declaration(self, mutable: bool) -> VariableDeclaration:  
+        """
+        Parse variable declaration:
+        plant int age = 21
+        root str name = "Subhro"
+        """
+        # Parse the type 
+        if self._match(TokenType.INT):
+            var_type = 'int'
+        elif self._match(TokenType.STR):
+            var_type = 'str'
+        elif self._match(TokenType.BOOL):
+            var_type = 'bool'
+        elif self._match(TokenType.FLOAT):
+            var_type = 'float'
+        else:
+            raise SyntaxError(
+                f"Expected type (int, str, bool, float) at line {self._peek().line}"
+            )
+        # parse the variable name
+        name_token = self._consume(
+            TokenType.IDENTIFIER,
+            f"Expected variable name after type at line {self._peek().line}" 
+        )
+
+        name = name_token.value
+
+        # parse the initial value
+        value = None
+        if self._match(TokenType.EQUALS):
+            value = self._expression()
+        return VariableDeclaration(mutable, var_type,name, value)
+
+
+
 
     def _power(self) -> ASTNode:
         """Parse the power operator (**)."""
