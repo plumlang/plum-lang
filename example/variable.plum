@@ -1,4 +1,25 @@
-root int a = 10
-root int b = 20
-plant int c = a + b
-drop(c)
+-- Variables and Type Safety
+
+drop ("=== Basic Variables ===")
+
+plant int age = (21)
+drop (age)
+
+plant float price = (19.99)
+drop (price)
+
+plant str name = ("Plum")
+drop (name)
+
+plant bool isReady = (true)
+drop (isReady)
+
+-- Immutable variables
+root int MAX_COUNT = (100)
+drop (MAX_COUNT)
+
+root str VERSION = ("0.6.0")
+drop (VERSION)
+
+-- This would cause an error if uncommented:
+-- MAX_COUNT = (200)  -- Error: cannot reassign root variable
