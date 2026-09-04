@@ -22,7 +22,7 @@ class Lexer:
                self.position += 1
                continue
             
-            #String Litral
+            #String Literal
             if current == '"':
                 self.tokens.append(self._string())
                 continue
@@ -32,16 +32,8 @@ class Lexer:
                 self.tokens.append(self._number())
                 continue
 
-            # Equality and assignment operators
-            if current == '=':
-                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
-                    self.tokens.append(Token(TokenType.EQUAL_EQUAL, '==', self.line))
-                    self.position += 2
-                    continue
-                else:
-                    raise SyntaxError(
-                        f"Unexpected character '=' on line {self.line}"
-                  )
+            # REMOVED: The old/bad '=' handler that raises an error
+            # This was causing the SyntaxError: Unexpected character '='
 
             # Addition operator (+)
             if current == '+':
@@ -70,7 +62,6 @@ class Lexer:
                     raise SyntaxError(
                         f"Unterminated comment on line {self.line}"
                     )
-
 
                 continue
 
@@ -149,9 +140,9 @@ class Lexer:
                 self.position += 1
                 continue
 
-            # New: v0.5 (sk) equal sign for assignment
+            # v0.5: Equals sign for assignment (=) and comparison (==)
             if current == '=':
-                #check if it's == (comparison) or = (assignment)
+                # Check if it's == (comparison) or = (assignment)
                 if (self.position + 1 < len(self.source) and self.source[self.position + 1] == '='):
                     # It's == 
                     self.tokens.append(Token(TokenType.EQUAL_EQUAL, '==', self.line))
@@ -162,6 +153,7 @@ class Lexer:
                     self.position += 1
                 continue
 
+            # Identifiers (keywords and variable names)
             if current.isalpha():
                self.tokens.append(self._identifier())
                continue
@@ -192,8 +184,10 @@ class Lexer:
 
     def _identifier(self) -> Token:
         start = self.position
-        while ( self.position < len(self.source) and (self.source[self.position].isalnum or self.source[self.position] == '_') 
-            ):
+        while (
+            self.position < len(self.source)
+            and (self.source[self.position].isalnum() or self.source[self.position] == '_')
+        ):
             self.position += 1
 
         value = self.source[start: self.position]
@@ -201,35 +195,31 @@ class Lexer:
         # v0.1 keywords
         if value == 'drop':
             return Token(TokenType.DROP, value, self.line)
-        # v0.4 boolean keyword
-        if value == 'good':
+        
+        # v0.4 boolean keywords (support both 'true'/'false' and 'good'/'bad')
+        if value == 'true' or value == 'good':
             return Token(TokenType.GOOD, value, self.line)
-
-        if value == 'bad':
+        if value == 'false' or value == 'bad':
             return Token(TokenType.BAD, value, self.line)
         
-        #v0.5 variable keyword
+        # v0.5 variable keywords
         if value == 'plant':
             return Token(TokenType.PLANT, value, self.line)
-        
         if value == 'root':
             return Token(TokenType.ROOT, value, self.line)
         
-        #v0.5 type keyword
-
+        # v0.5 type keywords
         if value == 'int':
-           return Token(TokenType.INT, value, self.line)
-        
+            return Token(TokenType.INT, value, self.line)
         if value == 'str':
             return Token(TokenType.STR, value, self.line)
-        
         if value == 'bool':
             return Token(TokenType.BOOL, value, self.line)
-        
         if value == 'float':
-            return TokenType(TokenType.FLOAT, value, self.line)
+            # FIXED: Was TokenType() incorrectly, now Token()
+            return Token(TokenType.FLOAT, value, self.line)
         
-        # if not a keyword, it's a variable name (IDENTIFIER)
+        # If not a keyword, it's a variable name (IDENTIFIER)
         return Token(TokenType.IDENTIFIER, value, self.line)
 
 
@@ -253,5 +243,5 @@ class Lexer:
                    and self.source[self.position].isdigit()):
                 self.position += 1
 
-        value = self.source[start:self.position]  # ✅ Fixed: moved outside loop
+        value = self.source[start:self.position]
         return Token(TokenType.NUMBER, value, self.line)

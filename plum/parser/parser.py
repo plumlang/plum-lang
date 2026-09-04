@@ -74,7 +74,7 @@ class Parser:
             return BooleanLiteral(False)
         # New: v0.5 Variable reference (IDENTIFER)
         if self._match(TokenType.IDENTIFIER):
-            return _variable_declaration(self._previous().value)
+            return VariableReference(self._previous().value)
 
         raise SyntaxError(
             f"Unexpected token: {self._peek().value} "
@@ -117,7 +117,17 @@ class Parser:
         return VariableDeclaration(mutable, var_type,name, value)
 
 
+    def _assignment(self) -> Assignment:
+        """Parse variable assignment: x = 10"""
+        name_token = self._consume(
+            TokenType.IDENTIFIER,
+            "Expected variable name for assignment"
 
+        )
+        name = name_token.value
+        self._consume(TokenType.EQUALS, "Expected '=' after variable name")
+        value = self._expression()
+        return Assignment(name, value)
 
     def _power(self) -> ASTNode:
         """Parse the power operator (**)."""
@@ -189,6 +199,21 @@ class Parser:
 
     def _statement(self) -> ASTNode:
         """Parse a single statement"""
+        # New Variable declaration (plant or root)
+        if self._match(TokenType.PLANT):
+            return self._variable_declaration(mutable=True)
+        
+        if self._match(TokenType.ROOT):
+            return self._variable_declaration(mutable=False)
+
+        # New: variable assignment (check if current token is Identifer follow by = )
+        if self._check(TokenType.IDENTIFIER):
+            #peeek ahead to see if it's an assignment
+            if(self.current +1 < len(self.tokens) and self.tokens[self.current+1].type == TokenType.EQUALS):
+                return self._assignment()
+        
+        
+
 
         # Check if it's a 'drop' statement
         if self._match(TokenType.DROP):
