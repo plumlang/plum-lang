@@ -1,0 +1,4 @@
+root int a = 10
+root int b = 20
+plant int c = a + b
+drop(c)
