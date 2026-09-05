@@ -140,6 +140,23 @@ class Lexer:
                 self.position += 1
                 continue
 
+            # New: Left Brace {
+            if current == '{':
+                self.tokens.append(Token(TokenType.LEFT_BRACE, '{', self.line))
+                self.position += 1;
+                continue;
+            
+            # New: Right Brace }
+            if current == '}':
+                self.tokens.append(Token(TokenType.RIGHT_BRACE, '}', self.line))
+                self.position += 1;
+                continue
+
+            if current == ',':
+               self.tokens.append(Token(TokenType.COMMA, ',', self.line))
+               self.position += 1;
+               continue
+
             # v0.5: Equals sign for assignment (=) and comparison (==)
             if current == '=':
                 # Check if it's == (comparison) or = (assignment)
@@ -218,6 +235,13 @@ class Lexer:
         if value == 'float':
             # FIXED: Was TokenType() incorrectly, now Token()
             return Token(TokenType.FLOAT, value, self.line)
+        
+        # v0.7 func keyword (NEW)
+        if value == 'branch':
+           return Token(TokenType.BRANCH, value, self.line)
+        
+        if value == 'return':
+            return Token(TokenType.RETURN, value, self.line)
         
         # If not a keyword, it's a variable name (IDENTIFIER)
         return Token(TokenType.IDENTIFIER, value, self.line)

@@ -27,11 +27,11 @@ class TokenType(Enum):
     LESS = auto()           # <
     GREATER_EQUAL = auto()  # >=
     LESS_EQUAL = auto()     # <=
- 
+    #v.5
     GOOD = auto()   # true
     BAD = auto()    # false
 
-    #v0.5 - keyword variables 
+    #v0.6 - keyword variables 
     PLANT = auto(); # mutable variables keyword
     ROOT = auto();  # immutable variable keyword
     INT = auto();
@@ -40,5 +40,12 @@ class TokenType(Enum):
     FLOAT = auto();
     EQUALS = auto(); # = assignment
     IDENTIFIER = auto(); # variable names
+
+    #v0.7 Functions(NEW)
+    BRANCH = auto();
+    RETURN = auto();
+    LEFT_BRACE = auto();
+    RIGHT_BRACE = auto();
+    COMMA = auto();
     
 
