@@ -8,5 +8,8 @@ from .ast import (
     BinaryOperation,
     VariableDeclaration,
     VariableReference,
-    Assignment
+    Assignment,
+    FunctionCall,
+    FunctionDeclaration,
+    ReturnStatement
 )

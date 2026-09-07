@@ -52,3 +52,22 @@ class Assignment(ASTNode):
      """Variable assignment: x = 10 (only for mutable variables)"""
      name: str
      value: ASTNode
+# NEW: function nodes (v0.7)
+@dataclass
+class FunctionDeclaration(ASTNode):
+     """Function declaration: branch int add(int a, int b) { ... }"""
+     return_type: str 
+     name: str
+     params: List[tuple]
+     body: List[ASTNode]
+
+@dataclass
+class FunctionCall(ASTNode):
+     """Function call: add(5, 3)"""
+     name: str
+     arguments: List[ASTNode]
+
+@dataclass
+class ReturnStatement(ASTNode):
+     """Return statement: return x + 5"""
+     value: Optional[ASTNode] = None

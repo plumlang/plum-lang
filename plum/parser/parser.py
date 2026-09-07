@@ -74,12 +74,33 @@ class Parser:
             return BooleanLiteral(False)
         # New: v0.5 Variable reference (IDENTIFER)
         if self._match(TokenType.IDENTIFIER):
-            return VariableReference(self._previous().value)
+            name = self._previous().value
 
+            # check if it's a func call: identifier
+            if self._check(TokenType.LEFT_PAREN):
+                return self._finish_call(name);
+
+            return VariableReference(name) 
         raise SyntaxError(
             f"Unexpected token: {self._peek().value} "
             f"at line {self._peek().line}"
         )
+    
+    def _finish_call(self, name: str) -> FunctionCall:
+        """Finish parsing a function call after the opening paren"""
+        arguments = []
+        self._consume(TokenType.LEFT_PAREN, "Expected '(' after function name")
+
+        # Parse argument if any
+
+        if not self._check(TokenType.RIGHT_PAREN):
+            while True:
+                arguments.append(self._expression())
+                if not self._match(TokenType.COMMA):
+                    break
+        self._consume(TokenType.RIGHT_PAREN,"Expected ')' after arguments")
+        return FunctionCall(name, arguments)
+    
     
 
     # variable declaration (sk-v0.5)
@@ -199,6 +220,14 @@ class Parser:
 
     def _statement(self) -> ASTNode:
         """Parse a single statement"""
+        # func declare 
+        if self._match(TokenType.BRANCH):
+            return self._function_declaration()
+        
+        # return statement
+        if self._match(TokenType.RETURN):
+            return self._return_statement()
+
         # New Variable declaration (plant or root)
         if self._match(TokenType.PLANT):
             return self._variable_declaration(mutable=True)
@@ -221,6 +250,89 @@ class Parser:
 
         # Otherwise, it must be an expression
         return self._expression()
+
+    # return statement 
+    def _return_statement(self) -> ReturnStatement:
+        """Parse return statement: return x + 5"""
+        if self._match(TokenType.RETURN):
+            if self._check(TokenType.RIGHT_BRACE):
+               return ReturnStatement(None)
+            value = self._expression()
+            return ReturnStatement(value)
+        raise SystemError("Expected 'return' keyword")
+    
+    # parse params 
+    def _parse_params(self) -> List[tuple]:
+        """Parse function parameters: int a, str b, bool c"""
+        params = []
+
+        if not self._check(TokenType.RIGHT_PAREN):
+            while True:
+                # parse parameter type
+                if self._match(TokenType.INT):
+                   param_type = 'int'
+                elif self._match(TokenType.STR):
+                   param_type = 'str'
+                elif self._match(TokenType.FLOAT):
+                    param_type = 'float'
+                elif self._match(TokenType.BOOL):
+                    param_type = 'bool'
+                else:
+                    raise SyntaxError(f"Expected type in parameter list at line {self._peek().line}")
+                
+
+                name_token = self._consume(TokenType.IDENTIFIER, "Expected parameter name")
+
+                params.append((param_type, name_token.value))
+
+                if not self._match(TokenType.COMMA):
+                   break
+        return params
+
+
+    def _function_declaration(self) -> FunctionDeclaration:
+        """Parse function: branch int add(int a, int b) { ... }"""
+
+        # parse return type
+        if self._match(TokenType.INT):
+           return_type = 'int'
+        elif self._match(TokenType.STR):
+           return_type = 'str'
+        elif self._match(TokenType.BOOL):
+            return_type = 'bool'
+        elif self._match(TokenType.FLOAT):
+            return_type = 'float'
+        elif self._match(TokenType.DROP):
+            return_type = 'void' # special case
+        else:
+            raise SyntaxError(f"Expected return type at line {self._peek().line}")
+        
+
+        #parse func name
+        name_token = self._consume(TokenType.IDENTIFIER, "Expected function name")
+
+        name = name_token.value
+
+        # parse parameter 
+        self._consume(TokenType.LEFT_PAREN, "Expected '(' after function name")
+        params = self._parse_params()
+        self._consume(TokenType.RIGHT_PAREN, "Expected ')' after function name")
+
+        # parse function body
+        self._consume(TokenType.LEFT_BRACE, "Expected '{' after function body")
+
+        body = []
+
+        # parse statements inside the func body
+        while not self._check(TokenType.RIGHT_BRACE) and not self._is_at_end():
+            stmt = self._statement()
+            body.append(stmt)
+        
+        self._consume(TokenType.RIGHT_BRACE, "Expected '}' to close function body")
+
+        return FunctionDeclaration(return_type, name, params, body)
+    
+
 
     def parse(self) -> Program:
         """Parse all tokens into an AST"""
