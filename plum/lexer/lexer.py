@@ -249,6 +249,16 @@ class Lexer:
 
         if value == 'else':
            return Token(TokenType.ELSE, value, self.line)
+
+        # v0.9 - Logical operators
+        if value == 'and':
+            return Token(TokenType.AND, value, self.line)
+
+        if value == 'or':
+            return Token(TokenType.OR, value, self.line)
+
+        if value == 'not':
+            return Token(TokenType.NOT, value, self.line)
         
         # If not a keyword, it's a variable name (IDENTIFIER)
         return Token(TokenType.IDENTIFIER, value, self.line)

@@ -1,0 +1,83 @@
+if (true and true) {
+    drop "TEST 1: PASS"
+} else {
+    drop "TEST 1: FAIL"
+}
+
+if (true and false) {
+    drop "TEST 2: FAIL"
+} else {
+    drop "TEST 2: PASS"
+}
+
+if (false and false) {
+    drop "TEST 3: FAIL"
+} else {
+    drop "TEST 3: PASS"
+}
+
+if (true or true) {
+    drop "TEST 4: PASS"
+} else {
+    drop "TEST 4: FAIL"
+}
+
+if (true or false) {
+    drop "TEST 5: PASS"
+} else {
+    drop "TEST 5: FAIL"
+}
+
+if (false or false) {
+    drop "TEST 6: FAIL"
+} else {
+    drop "TEST 6: PASS"
+}
+
+if (not true) {
+    drop "TEST 7: FAIL"
+} else {
+    drop "TEST 7: PASS"
+}
+
+if (not false) {
+    drop "TEST 8: PASS"
+} else {
+    drop "TEST 8: FAIL"
+}
+
+if (true and false or true) {
+    drop "TEST 9: PASS"
+} else {
+    drop "TEST 9: FAIL"
+}
+
+if (false or true and true) {
+    drop "TEST 10: PASS"
+} else {
+    drop "TEST 10: FAIL"
+}
+
+if (not false and true) {
+    drop "TEST 11: PASS"
+} else {
+    drop "TEST 11: FAIL"
+}
+
+if (not true or true) {
+    drop "TEST 12: PASS"
+} else {
+    drop "TEST 12: FAIL"
+}
+
+if (not not true) {
+    drop "TEST 13: PASS"
+} else {
+    drop "TEST 13: FAIL"
+}
+
+if ((true and false) or true) {
+    drop "TEST 14: PASS"
+} else {
+    drop "TEST 14: FAIL"
+}

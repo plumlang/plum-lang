@@ -51,3 +51,8 @@ class TokenType(Enum):
     # v0.8 - Conditionals
     IF = auto()
     ELSE = auto()
+
+    # v0.9 - Logical operators
+    AND = auto()       # and
+    OR = auto()        # or
+    NOT = auto()       # not

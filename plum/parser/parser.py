@@ -127,8 +127,9 @@ class Parser:
             left = BinaryOperation(left, operator, right)
         return left
 
-    def _expression(self) -> ASTNode:
-        return self._comparison()
+    def _expression(self):
+        return self._or()
+        
 
     def _print_statement(self) -> PrintStatement:
         expr = self._expression()
@@ -336,6 +337,37 @@ class Parser:
 
         # Expression (including function calls)
         return self._expression()
+
+    # v0.9 - Logical OR
+    def _or(self):
+        left = self._and()
+
+        while self._match(TokenType.OR):
+            operator = "or"
+            right = self._and()
+            left = BinaryOperation(left, operator, right)
+
+        return left
+
+
+    # v0.9 - Logical NOT
+    def _not(self):
+        if self._match(TokenType.NOT):
+            return UnaryOperation("not", self._not())
+
+        return self._comparison()
+
+
+    # v0.9 - Logical AND
+    def _and(self):
+        left = self._not()
+
+        while self._match(TokenType.AND):
+            operator = "and"
+            right = self._not()
+            left = BinaryOperation(left, operator, right)
+
+        return left
 
     def parse(self) -> Program:
         statements = []
