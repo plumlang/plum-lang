@@ -48,4 +48,6 @@ class TokenType(Enum):
     RIGHT_BRACE = auto();
     COMMA = auto();
     
-
+    # v0.8 - Conditionals
+    IF = auto()
+    ELSE = auto()

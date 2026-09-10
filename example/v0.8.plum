@@ -1,0 +1,67 @@
+-- v0.8 If / Else Edge Case Tests --
+
+-- 1. False condition --
+if (10 < 5) {
+    drop "TEST 1: yes"
+} else {
+    drop "TEST 1: no"
+}
+
+-- 2. Equality --
+if (10 == 10) {
+    drop "TEST 2: equal"
+} else {
+    drop "TEST 2: not equal"
+}
+
+-- 3. Variables --
+plant int age = (21)
+
+if (age > 18) {
+    drop "TEST 3: adult"
+} else {
+    drop "TEST 3: minor"
+}
+
+-- 4. String condition --
+plant str name = ("Plum")
+
+if (name == "Plum") {
+    drop "TEST 4: correct"
+} else {
+    drop "TEST 4: wrong"
+}
+
+-- 5. Boolean condition --
+plant bool ready = (true)
+
+if (ready) {
+    drop "TEST 5: ready"
+} else {
+    drop "TEST 5: not ready"
+}
+
+-- 6. Multiple statements --
+if (10 > 5) {
+    drop "TEST 6: first"
+    drop "TEST 6: second"
+} else {
+    drop "TEST 6: third"
+    drop "TEST 6: fourth"
+}
+
+-- 7. Nested if --
+if (10 > 5) {
+    if (20 > 10) {
+        drop "TEST 7: nested yes"
+    } else {
+        drop "TEST 7: nested no"
+    }
+} else {
+    drop "TEST 7: outer no"
+}
+
+-- 8. If without else --
+if (10 > 5) {
+    drop "TEST 8: yes"
+}

@@ -242,6 +242,13 @@ class Lexer:
         
         if value == 'return':
             return Token(TokenType.RETURN, value, self.line)
+
+        # v0.8 conditional keywords
+        if value == 'if':
+             return Token(TokenType.IF, value, self.line)
+
+        if value == 'else':
+           return Token(TokenType.ELSE, value, self.line)
         
         # If not a keyword, it's a variable name (IDENTIFIER)
         return Token(TokenType.IDENTIFIER, value, self.line)

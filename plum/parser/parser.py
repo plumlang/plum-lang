@@ -242,6 +242,62 @@ class Parser:
         self._consume(TokenType.RIGHT_BRACE, "Expected '}' to close function body")
         
         return FunctionDeclaration(return_type, name, params, body)
+    
+    # v0.8 - parse if/else statement
+    def _if_statement(self) -> IfStatement:
+        # if (condition)
+        self._consume(
+            TokenType.LEFT_PAREN,
+            "Expected '(' after 'if'"
+        )
+
+        condition = self._expression()
+
+        self._consume(
+            TokenType.RIGHT_PAREN,
+            "Expected ')' after condition"
+        )
+
+        # if { ... }
+        self._consume(
+            TokenType.LEFT_BRACE,
+            "Expected '{' after condition"
+        )
+
+        then_branch = []
+
+        while not self._check(TokenType.RIGHT_BRACE) and not self._is_at_end():
+            then_branch.append(self._statement())
+
+        self._consume(
+            TokenType.RIGHT_BRACE,
+            "Expected '}' after if block"
+        )
+
+        # else { ... }
+        else_branch = None
+
+        if self._match(TokenType.ELSE):
+            self._consume(
+                TokenType.LEFT_BRACE,
+                "Expected '{' after 'else'"
+            )
+
+            else_branch = []
+
+            while not self._check(TokenType.RIGHT_BRACE) and not self._is_at_end():
+                else_branch.append(self._statement())
+
+            self._consume(
+                TokenType.RIGHT_BRACE,
+                "Expected '}' after else block"
+            )
+
+        return IfStatement(
+            condition=condition,
+            then_branch=then_branch,
+            else_branch=else_branch
+        )
 
     def _statement(self) -> ASTNode:
         # Function declaration
@@ -267,6 +323,10 @@ class Parser:
         # Print statement
         if self._match(TokenType.DROP):
             return self._print_statement()
+
+        # v0.8 - if/else statement
+        if self._match(TokenType.IF):
+           return self._if_statement()
 
         # Expression (including function calls)
         return self._expression()
