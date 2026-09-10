@@ -2,8 +2,6 @@ branch int add(int a, int b) {
     return a + b
 }
 
-plant int a = 10
-plant int b = 20
-plant int result = add(a,b)
-drop ("hello new sum func -> sum result is")
-drop(result)
+plant int c = add(10,20)
+drop("sum is")
+drop(c)
