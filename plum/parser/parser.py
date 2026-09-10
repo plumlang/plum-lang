@@ -127,8 +127,9 @@ class Parser:
             left = BinaryOperation(left, operator, right)
         return left
 
-    def _expression(self) -> ASTNode:
-        return self._comparison()
+    def _expression(self):
+        return self._or()
+        
 
     def _print_statement(self) -> PrintStatement:
         expr = self._expression()
@@ -274,31 +275,37 @@ class Parser:
             "Expected '}' after if block"
         )
 
-        # else { ... }
-        else_branch = None
+        # else / else if
+        else_branch: Optional[List[ASTNode]] = None
 
         if self._match(TokenType.ELSE):
-            self._consume(
-                TokenType.LEFT_BRACE,
-                "Expected '{' after 'else'"
-            )
 
-            else_branch = []
+            # else if (...)
+            if self._match(TokenType.IF):
+                else_branch = [self._if_statement()]
 
-            while not self._check(TokenType.RIGHT_BRACE) and not self._is_at_end():
-                else_branch.append(self._statement())
+            # else { ... }
+            else:
+                self._consume(
+                    TokenType.LEFT_BRACE,
+                    "Expected '{' after 'else'"
+                )
 
-            self._consume(
-                TokenType.RIGHT_BRACE,
-                "Expected '}' after else block"
-            )
+                else_branch = []
+
+                while not self._check(TokenType.RIGHT_BRACE) and not self._is_at_end():
+                    else_branch.append(self._statement())
+
+                self._consume(
+                    TokenType.RIGHT_BRACE,
+                    "Expected '}' after else block"
+                )
 
         return IfStatement(
             condition=condition,
             then_branch=then_branch,
             else_branch=else_branch
         )
-
     def _statement(self) -> ASTNode:
         # Function declaration
         if self._match(TokenType.BRANCH):
@@ -330,6 +337,37 @@ class Parser:
 
         # Expression (including function calls)
         return self._expression()
+
+    # v0.9 - Logical OR
+    def _or(self):
+        left = self._and()
+
+        while self._match(TokenType.OR):
+            operator = "or"
+            right = self._and()
+            left = BinaryOperation(left, operator, right)
+
+        return left
+
+
+    # v0.9 - Logical NOT
+    def _not(self):
+        if self._match(TokenType.NOT):
+            return UnaryOperation("not", self._not())
+
+        return self._comparison()
+
+
+    # v0.9 - Logical AND
+    def _and(self):
+        left = self._not()
+
+        while self._match(TokenType.AND):
+            operator = "and"
+            right = self._not()
+            left = BinaryOperation(left, operator, right)
+
+        return left
 
     def parse(self) -> Program:
         statements = []

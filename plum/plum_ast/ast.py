@@ -34,6 +34,13 @@ class BinaryOperation(ASTNode):
     left: ASTNode 
     operator: str 
     right: ASTNode
+    
+# v0.9 - logical operators
+@dataclass
+class UnaryOperation(ASTNode):
+    """A logical operation like not true"""
+    operator: str
+    operand: ASTNode
 
 @dataclass
 class VariableDeclaration(ASTNode):
