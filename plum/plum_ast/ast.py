@@ -52,6 +52,15 @@ class Assignment(ASTNode):
      """Variable assignment: x = 10 (only for mutable variables)"""
      name: str
      value: ASTNode
+
+# v0.8 - if/else statement
+@dataclass
+class IfStatement(ASTNode):
+    """Represents an if/else statement"""
+    condition: ASTNode
+    then_branch: List[ASTNode]
+    else_branch: Optional[List[ASTNode]] = None
+    
 # NEW: function nodes (v0.7)
 @dataclass
 class FunctionDeclaration(ASTNode):

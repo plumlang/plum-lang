@@ -240,7 +240,19 @@ class Interpreter:
                 self.return_value = None
             return self.return_value
     
+                # v0.8 - if/else statement
+        elif isinstance(node, IfStatement):
+            condition = self._evaluate(node.condition)
 
+            if condition:
+                for statement in node.then_branch:
+                    self._evaluate(statement)
+            elif node.else_branch is not None:
+                for statement in node.else_branch:
+                    self._evaluate(statement)
+
+            return None
+        
         # Binary operation
         elif isinstance(node, BinaryOperation):
             left_val = self._evaluate(node.left)
