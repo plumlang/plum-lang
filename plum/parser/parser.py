@@ -274,31 +274,37 @@ class Parser:
             "Expected '}' after if block"
         )
 
-        # else { ... }
-        else_branch = None
+        # else / else if
+        else_branch: Optional[List[ASTNode]] = None
 
         if self._match(TokenType.ELSE):
-            self._consume(
-                TokenType.LEFT_BRACE,
-                "Expected '{' after 'else'"
-            )
 
-            else_branch = []
+            # else if (...)
+            if self._match(TokenType.IF):
+                else_branch = [self._if_statement()]
 
-            while not self._check(TokenType.RIGHT_BRACE) and not self._is_at_end():
-                else_branch.append(self._statement())
+            # else { ... }
+            else:
+                self._consume(
+                    TokenType.LEFT_BRACE,
+                    "Expected '{' after 'else'"
+                )
 
-            self._consume(
-                TokenType.RIGHT_BRACE,
-                "Expected '}' after else block"
-            )
+                else_branch = []
+
+                while not self._check(TokenType.RIGHT_BRACE) and not self._is_at_end():
+                    else_branch.append(self._statement())
+
+                self._consume(
+                    TokenType.RIGHT_BRACE,
+                    "Expected '}' after else block"
+                )
 
         return IfStatement(
             condition=condition,
             then_branch=then_branch,
             else_branch=else_branch
         )
-
     def _statement(self) -> ASTNode:
         # Function declaration
         if self._match(TokenType.BRANCH):
