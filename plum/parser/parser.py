@@ -127,12 +127,22 @@ class Parser:
             left = BinaryOperation(left, operator, right)
         return left
 
-    def _expression(self):
-        return self._or()
-        
+    def _expression(self) -> ASTNode:
+        return self._comparison()
 
     def _print_statement(self) -> PrintStatement:
+        self._consume(
+            TokenType.LEFT_PAREN,
+            "Expected '(' after 'drop'"
+        )
+
         expr = self._expression()
+
+        self._consume(
+            TokenType.RIGHT_PAREN,
+            "Expected ')' after expression"
+        )
+
         return PrintStatement(expr)
 
     def _variable_declaration(self, mutable: bool) -> VariableDeclaration:
@@ -335,40 +345,91 @@ class Parser:
         if self._match(TokenType.IF):
            return self._if_statement()
 
+        #v0.9 - Loops (for)
+        if self._check(TokenType.FOR):
+            return self._for_statement()
+
         # Expression (including function calls)
         return self._expression()
 
-    # v0.9 - Logical OR
-    def _or(self):
-        left = self._and()
+    def _for_statement(self) -> ForStatement:
+        # for (
+        self._consume(
+            TokenType.FOR,
+            "Expected 'for'"
+        )
 
-        while self._match(TokenType.OR):
-            operator = "or"
-            right = self._and()
-            left = BinaryOperation(left, operator, right)
+        self._consume(
+            TokenType.LEFT_PAREN,
+            "Expected '(' after 'for'"
+        )
 
-        return left
+        # initializer
+        initializer = self._statement()
 
+        self._consume(
+            TokenType.SEMICOLON,
+            "Expected ';' after for initializer"
+        )
 
-    # v0.9 - Logical NOT
-    def _not(self):
-        if self._match(TokenType.NOT):
-            return UnaryOperation("not", self._not())
+        # condition
+        condition = self._expression()
 
-        return self._comparison()
+        self._consume(
+            TokenType.SEMICOLON,
+            "Expected ';' after for condition"
+        )
 
+        # increment
+        increment = self._increment()
 
-    # v0.9 - Logical AND
-    def _and(self):
-        left = self._not()
+        self._consume(
+            TokenType.RIGHT_PAREN,
+            "Expected ')' after for clauses"
+        )
 
-        while self._match(TokenType.AND):
-            operator = "and"
-            right = self._not()
-            left = BinaryOperation(left, operator, right)
+        # body
+        self._consume(
+            TokenType.LEFT_BRACE,
+            "Expected '{' before for body"
+        )
 
-        return left
+        body = []
 
+        while not self._check(TokenType.RIGHT_BRACE) and not self._is_at_end():
+            body.append(self._statement())
+
+        self._consume(
+            TokenType.RIGHT_BRACE,
+            "Expected '}' after for body"
+        )
+
+        return ForStatement(
+            initializer=initializer,
+            condition=condition,
+            increment=increment,
+            body=body
+        )
+
+    def _increment(self) -> Assignment:
+     name = self._consume(
+        TokenType.IDENTIFIER,
+        "Expected variable name in for increment"
+    )
+
+     self._consume(
+        TokenType.INCREAMENT,
+        "Expected '++' after variable"
+    )
+
+     return Assignment(
+        name=name.value,
+        value=BinaryOperation(
+            left=VariableReference(name=name.value),
+            operator="+",
+            right=NumberLiteral(value=1)
+        )
+    )
     def parse(self) -> Program:
         statements = []
         while not self._is_at_end():

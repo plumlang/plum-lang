@@ -67,6 +67,15 @@ class IfStatement(ASTNode):
     condition: ASTNode
     then_branch: List[ASTNode]
     else_branch: Optional[List[ASTNode]] = None
+
+#v0.9 - for loop
+@dataclass
+class ForStatement(ASTNode):
+    """Represents a for loop"""
+    initializer: Optional[ASTNode]
+    condition: Optional[ASTNode]
+    increment: Optional[ASTNode]
+    body: List[ASTNode]
     
 # NEW: function nodes (v0.7)
 @dataclass

@@ -47,12 +47,12 @@ class TokenType(Enum):
     LEFT_BRACE = auto();
     RIGHT_BRACE = auto();
     COMMA = auto();
+    SEMICOLON =auto()
+    INCREAMENT = auto() # ++
     
     # v0.8 - Conditionals
     IF = auto()
     ELSE = auto()
 
-    # v0.9 - Logical operators
-    AND = auto()       # and
-    OR = auto()        # or
-    NOT = auto()       # not
+    #v0.9 - Loops (for loop , while loop )
+    FOR =auto()

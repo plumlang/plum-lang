@@ -34,11 +34,15 @@ class Lexer:
 
             # REMOVED: The old/bad '=' handler that raises an error
             # This was causing the SyntaxError: Unexpected character '='
-
-            # Addition operator (+)
+            
+            # Addition (+) and increment (++)
             if current == '+':
-                self.tokens.append(Token(TokenType.PLUS, '+', self.line))
-                self.position += 1
+                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '+':
+                    self.tokens.append(Token(TokenType.INCREAMENT, '++', self.line))
+                    self.position += 2
+                else:
+                    self.tokens.append(Token(TokenType.PLUS, '+', self.line))
+                    self.position += 1
                 continue
 
             # Comments (--)
@@ -151,11 +155,17 @@ class Lexer:
                 self.tokens.append(Token(TokenType.RIGHT_BRACE, '}', self.line))
                 self.position += 1;
                 continue
+            if  current == ';' :
+                self.tokens.append(Token(TokenType.SEMICOLON, ';', self.line))
+                self.position += 1
+                continue
 
             if current == ',':
                self.tokens.append(Token(TokenType.COMMA, ',', self.line))
                self.position += 1;
                continue
+
+
 
             # v0.5: Equals sign for assignment (=) and comparison (==)
             if current == '=':
@@ -250,15 +260,8 @@ class Lexer:
         if value == 'else':
            return Token(TokenType.ELSE, value, self.line)
 
-        # v0.9 - Logical operators
-        if value == 'and':
-            return Token(TokenType.AND, value, self.line)
-
-        if value == 'or':
-            return Token(TokenType.OR, value, self.line)
-
-        if value == 'not':
-            return Token(TokenType.NOT, value, self.line)
+        if value=='for':
+            return Token(TokenType.FOR ,value ,self.line)
         
         # If not a keyword, it's a variable name (IDENTIFIER)
         return Token(TokenType.IDENTIFIER, value, self.line)
