@@ -252,6 +252,23 @@ class Interpreter:
                     self._evaluate(statement)
 
             return None
+
+        # v0.9 - for loop
+        elif isinstance(node, ForStatement):
+            # Initialize loop variable
+            if node.initializer is not None:
+                self._evaluate(node.initializer)
+
+            # Run while condition is true
+            while node.condition is not None and self._evaluate(node.condition):
+                for statement in node.body:
+                    self._evaluate(statement)
+
+                # Increment loop variable
+                if node.increment is not None:
+                    self._evaluate(node.increment)
+
+            return None
         
         # Binary operation
         elif isinstance(node, BinaryOperation):

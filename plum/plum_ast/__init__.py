@@ -1,31 +1,17 @@
 from .ast import (
-
     ASTNode,
-
     Program,
-
     PrintStatement,
-
     NumberLiteral,
-
-    StringLiteral,
-
     BooleanLiteral,
-
+    StringLiteral,
     BinaryOperation,
-
     VariableDeclaration,
-
     VariableReference,
-
     Assignment,
-
     IfStatement,
-
-    FunctionCall,
-
+    ForStatement,
     FunctionDeclaration,
-
-    ReturnStatement
-
+    FunctionCall,
+    ReturnStatement,
 )

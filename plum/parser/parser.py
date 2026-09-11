@@ -131,7 +131,18 @@ class Parser:
         return self._comparison()
 
     def _print_statement(self) -> PrintStatement:
+        self._consume(
+            TokenType.LEFT_PAREN,
+            "Expected '(' after 'drop'"
+        )
+
         expr = self._expression()
+
+        self._consume(
+            TokenType.RIGHT_PAREN,
+            "Expected ')' after expression"
+        )
+
         return PrintStatement(expr)
 
     def _variable_declaration(self, mutable: bool) -> VariableDeclaration:
@@ -334,9 +345,91 @@ class Parser:
         if self._match(TokenType.IF):
            return self._if_statement()
 
+        #v0.9 - Loops (for)
+        if self._check(TokenType.FOR):
+            return self._for_statement()
+
         # Expression (including function calls)
         return self._expression()
 
+    def _for_statement(self) -> ForStatement:
+        # for (
+        self._consume(
+            TokenType.FOR,
+            "Expected 'for'"
+        )
+
+        self._consume(
+            TokenType.LEFT_PAREN,
+            "Expected '(' after 'for'"
+        )
+
+        # initializer
+        initializer = self._statement()
+
+        self._consume(
+            TokenType.SEMICOLON,
+            "Expected ';' after for initializer"
+        )
+
+        # condition
+        condition = self._expression()
+
+        self._consume(
+            TokenType.SEMICOLON,
+            "Expected ';' after for condition"
+        )
+
+        # increment
+        increment = self._increment()
+
+        self._consume(
+            TokenType.RIGHT_PAREN,
+            "Expected ')' after for clauses"
+        )
+
+        # body
+        self._consume(
+            TokenType.LEFT_BRACE,
+            "Expected '{' before for body"
+        )
+
+        body = []
+
+        while not self._check(TokenType.RIGHT_BRACE) and not self._is_at_end():
+            body.append(self._statement())
+
+        self._consume(
+            TokenType.RIGHT_BRACE,
+            "Expected '}' after for body"
+        )
+
+        return ForStatement(
+            initializer=initializer,
+            condition=condition,
+            increment=increment,
+            body=body
+        )
+
+    def _increment(self) -> Assignment:
+     name = self._consume(
+        TokenType.IDENTIFIER,
+        "Expected variable name in for increment"
+    )
+
+     self._consume(
+        TokenType.INCREAMENT,
+        "Expected '++' after variable"
+    )
+
+     return Assignment(
+        name=name.value,
+        value=BinaryOperation(
+            left=VariableReference(name=name.value),
+            operator="+",
+            right=NumberLiteral(value=1)
+        )
+    )
     def parse(self) -> Program:
         statements = []
         while not self._is_at_end():
