@@ -35,13 +35,6 @@ class BinaryOperation(ASTNode):
     operator: str 
     right: ASTNode
     
-# v0.9 - logical operators
-@dataclass
-class UnaryOperation(ASTNode):
-    """A logical operation like not true"""
-    operator: str
-    operand: ASTNode
-
 @dataclass
 class VariableDeclaration(ASTNode):
      """Variable declaration: plant int x = 5 or root int x = 5"""
@@ -67,6 +60,7 @@ class IfStatement(ASTNode):
     condition: ASTNode
     then_branch: List[ASTNode]
     else_branch: Optional[List[ASTNode]] = None
+
 
 #v0.9 - for loop
 @dataclass

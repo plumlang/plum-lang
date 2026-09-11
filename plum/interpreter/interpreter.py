@@ -313,27 +313,12 @@ class Interpreter:
             elif node.operator == '<=':
                 return left_val <= right_val
 
-            # v0.9 - Logical operators
-            elif node.operator == 'and':
-                return left_val and right_val
-            elif node.operator == 'or':
-                return left_val or right_val
-
             else:
                 raise RuntimeError(
                     f"Unknown operator: {node.operator}"
                 )
 
-                # v0.9 - Logical NOT
-        elif isinstance(node, UnaryOperation):
-            operand = self._evaluate(node.operand)
 
-            if node.operator == "not":
-                return not operand
-
-            raise RuntimeError(
-                f"Unknown unary operator: {node.operator}"
-            )
         
         else:
             raise RuntimeError(
