@@ -183,12 +183,15 @@ class Interpreter:
             for i, (param_type, param_name) in enumerate(func.params):
                 # Type check args
                 if param_type == 'int':
-                    if not isinstance(arg_values[i], (int, float)):
+                    arg = arg_values[i]
+
+                    if not isinstance(arg, (int, float)):
                         raise RuntimeError(
                             f"Type error: Expected int for parameter '{param_name}', "
-                            f"got {type(arg_values[i]).__name__}"
+                            f"got {type(arg).__name__}"
                         )
-                    self.current_env[param_name] = int(arg_values[i])
+
+                    self.current_env[param_name] = int(arg)
                 elif param_type == 'str':
                     if not isinstance(arg_values[i], str):
                         raise RuntimeError(
@@ -205,14 +208,15 @@ class Interpreter:
                         )
                     self.current_env[param_name] = arg_values[i]
                 elif param_type == 'float':
-                    if not isinstance(arg_values[i], (int, float)):
+                    arg = arg_values[i]
+
+                    if not isinstance(arg, (int, float)):
                         raise RuntimeError(
                             f"Type error: Expected float for parameter '{param_name}', "
-                            f"got {type(arg_values[i]).__name__}"
+                            f"got {type(arg).__name__}"
                         )
-                    self.current_env[param_name] = float(arg_values[i])
-                
-                self.return_value = None
+
+                    self.current_env[param_name] = float(arg)
             try:
                 for stmt in func.body:
                     self._evaluate(stmt)
