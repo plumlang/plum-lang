@@ -1,0 +1,24 @@
+drop ("--- TEST 1: AND ---")
+if (good && good) {
+    drop ("AND WORKS")
+}
+
+drop ("--- TEST 2: AND FALSE ---")
+if (good && bad) {
+    drop ("SHOULD NOT PRINT")
+}
+
+drop ("--- TEST 3: OR ---")
+if (bad || good) {
+    drop ("OR WORKS")
+}
+
+drop ("--- TEST 4: OR FALSE ---")
+if (bad || bad) {
+    drop ("SHOULD NOT PRINT")
+}
+
+drop ("--- TEST 5: COMBINED ---")
+if (good && good || bad) {
+    drop ("COMBINED WORKS")
+}

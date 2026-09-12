@@ -8,7 +8,7 @@ Plum is a toy programming language created to understand how real programming la
 
 ## Current Version
 
-- v0.9 — Logical Operators ✅
+- v0.9 — For Loops & Loop Control Flow ✅
 - v0.8 — Conditional Statements ✅
 - v0.7 — Functions & Returns ✅
 - v0.5 — Variables & Types ✅
@@ -26,19 +26,20 @@ Plum is a toy programming language created to understand how real programming la
 - [v0.5](docs/v0.5.md) — Variables & Types
 - [v0.7](docs/v0.7.md) — Functions & Returns
 - [v0.8](docs/v0.8.md) — Conditional Statements
-- [v0.9](docs/v0.9.md) — Logical Operators
+- [v0.9](docs/v0.9.md) — For Loops
 - Roadmap (coming soon)
 
 ## Features
 
-### v0.9 — Logical Operators
+### v0.9 — For Loops
 
-- 🔗 Logical `and`
-- 🔀 Logical `or`
-- 🚫 Logical `not`
-- 🧩 Combined logical conditions
-- 📐 Logical operator precedence
-- 🔄 Parenthesized logical expressions
+- 🔄 `for` loops
+- 🌱 Loop variable initialization
+- ⚖️ Loop conditions
+- ➕ `++` increment operator
+- 📦 Multiple statements inside loop bodies
+- 🔀 Loops with `if` / `else`
+- 🌳 Nested `for` loops
 
 ### v0.8 — Conditional Statements
 

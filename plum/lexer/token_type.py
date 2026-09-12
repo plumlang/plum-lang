@@ -56,3 +56,7 @@ class TokenType(Enum):
 
     #v0.9 - Loops (for loop , while loop )
     FOR =auto()
+
+    AND = auto()   # &&
+    OR = auto()    # ||
+    NOT = auto()   # !

@@ -101,16 +101,37 @@ class Lexer:
                 self.position += 1
                 continue
 
-            # Not equal operator (!=)
+            # Logical AND (&&)
+            if current == '&':
+                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '&':
+                    self.tokens.append(Token(TokenType.AND, '&&', self.line))
+                    self.position += 2
+                    continue
+
+                raise SyntaxError(
+                    f"Unexpected character '&' on line {self.line}"
+                )
+
+            # Logical OR (||)
+            if current == '|':
+                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '|':
+                    self.tokens.append(Token(TokenType.OR, '||', self.line))
+                    self.position += 2
+                    continue
+
+                raise SyntaxError(
+                    f"Unexpected character '|' on line {self.line}"
+                )
+
+            # Not equal (!=) and logical NOT (!)
             if current == '!':
-                 if self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
-                     self.tokens.append(Token(TokenType.NOT_EQUAL, '!=', self.line))
-                     self.position += 2
-                     continue
-                 else:
-                   raise SyntaxError(
-                         f"Unexpected character '!' on line {self.line}"
-                          )
+                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
+                    self.tokens.append(Token(TokenType.NOT_EQUAL, '!=', self.line))
+                    self.position += 2
+                else:
+                    self.tokens.append(Token(TokenType.NOT, '!', self.line))
+                    self.position += 1
+                continue
 
             # Greater than and greater than or equal
             if current == '>':
