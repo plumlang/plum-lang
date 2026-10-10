@@ -281,9 +281,19 @@ class Lexer:
         if value == 'else':
            return Token(TokenType.ELSE, value, self.line)
 
+        # v0.9 extended for loop
         if value=='for':
             return Token(TokenType.FOR ,value ,self.line)
         
+        # v0.9 extented while loop
+        if value=='while':
+            return Token(TokenType.WHILE, value, self.line)
+        
+        if value == 'break':
+           return Token(TokenType.BREAK, value, self.line)
+        
+        if value == 'continue':
+            return Token(TokenType.CONTINUE, value, self.line)
         # If not a keyword, it's a variable name (IDENTIFIER)
         return Token(TokenType.IDENTIFIER, value, self.line)
 

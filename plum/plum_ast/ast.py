@@ -19,6 +19,7 @@ class PrintStatement(ASTNode):
 class NumberLiteral(ASTNode):
     """A number like 42 or 3.14"""
     value: float
+
 @dataclass
 class BooleanLiteral(ASTNode):
     """A boolean value: good or bad"""
@@ -28,6 +29,7 @@ class BooleanLiteral(ASTNode):
 class StringLiteral(ASTNode):
      """A string like "hello" """
      value: str
+
 @dataclass 
 class BinaryOperation(ASTNode):
     """An operation like 5+3"""
@@ -42,6 +44,7 @@ class VariableDeclaration(ASTNode):
      var_type: str
      name: str
      value: Optional[ASTNode] = None
+
 @dataclass
 class VariableReference(ASTNode):
      """Reference to a variable: x"""
@@ -61,16 +64,6 @@ class IfStatement(ASTNode):
     then_branch: List[ASTNode]
     else_branch: Optional[List[ASTNode]] = None
 
-
-#v0.9 - for loop
-@dataclass
-class ForStatement(ASTNode):
-    """Represents a for loop"""
-    initializer: Optional[ASTNode]
-    condition: Optional[ASTNode]
-    increment: Optional[ASTNode]
-    body: List[ASTNode]
-    
 # NEW: function nodes (v0.7)
 @dataclass
 class FunctionDeclaration(ASTNode):
@@ -78,6 +71,22 @@ class FunctionDeclaration(ASTNode):
      return_type: str 
      name: str
      params: List[tuple]
+     body: List[ASTNode]
+
+# v0.9 - for loop
+@dataclass
+class ForStatement(ASTNode):
+    """Represents a for loop"""
+    initializer: Optional[ASTNode]
+    condition: Optional[ASTNode]
+    increment: Optional[ASTNode]
+    body: List[ASTNode]
+
+# v0.9 extended while loop
+@dataclass
+class WhileStatement(ASTNode):
+     """while loop: while condition {body}"""
+     condition: ASTNode
      body: List[ASTNode]
 
 @dataclass
@@ -90,3 +99,23 @@ class FunctionCall(ASTNode):
 class ReturnStatement(ASTNode):
      """Return statement: return x + 5"""
      value: Optional[ASTNode] = None
+
+# v0.9 — Loop control AST nodes (NEW — ADD THESE)
+@dataclass
+class BreakStatement(ASTNode):
+    """Break statement: break"""
+    pass
+
+@dataclass
+class ContinueStatement(ASTNode):
+    """Continue statement: continue"""
+    pass
+
+# Python exceptions used at runtime (already in your file)
+class BreakException(Exception):
+    """Used to break out of loops"""
+    pass
+
+class ContinueException(Exception):
+    """Used to skip to next iteration"""
+    pass

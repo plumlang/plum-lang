@@ -1,37 +1,4 @@
-drop ("--- TEST 1: NORMAL LOOP ---")
-for (plant int i = 1; i <= 5; i ++) {
-    drop (i)
+for(plant int i=0; i<=10; i++) {
+    drop(i)
 }
 
-drop ("--- TEST 2: CONDITION FALSE ---")
-for (plant int i = 10; i <= 5; i ++) {
-    drop (i)
-}
-
-drop ("--- TEST 3: SINGLE ITERATION ---")
-for (plant int i = 5; i <= 5; i ++) {
-    drop (i)
-}
-
-drop ("--- TEST 4: LOOP WITH IF ---")
-for (plant int i = 1; i <= 5; i ++) {
-    if (i == 3) {
-        drop ("MIDDLE")
-    }
-}
-
-drop ("--- TEST 5: LOOP WITH IF ELSE ---")
-for (plant int i = 1; i <= 3; i ++) {
-    if (i == 2) {
-        drop ("TWO")
-    } else {
-        drop ("OTHER")
-    }
-}
-
-drop ("--- TEST 6: NESTED LOOP ---")
-for (plant int i = 1; i <= 2; i ++) {
-    for (plant int j = 1; j <= 2; j ++) {
-        drop (j)
-    }
-}

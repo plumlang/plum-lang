@@ -348,6 +348,10 @@ class Parser:
         #v0.9 - Loops (for)
         if self._check(TokenType.FOR):
             return self._for_statement()
+        
+        #v0.9 extended while loop
+        if self._match(TokenType.WHILE):
+            return self._while_statement()
 
         # Expression (including function calls)
         return self._expression()
@@ -410,6 +414,31 @@ class Parser:
             increment=increment,
             body=body
         )
+
+    #v0.9 extended 
+    def _while_statement(self) -> WhileStatement:
+        """Parse while loop: while condition { body }"""
+
+        #consume '('
+        self._consume(TokenType.LEFT_PAREN, "Expected '(' after while condition")
+
+        #parse the condition 
+        condition = self._expression()
+        
+        self._consume(TokenType.RIGHT_PAREN, "Expected ')' after while condition")
+        # parse the body 
+        
+        self._consume(TokenType.LEFT_BRACE,"Expected '{' after while condition")
+
+        body = []
+        while not self._check(TokenType.RIGHT_BRACE) and not self._is_at_end():
+                stmt = self._statement()
+                body.append(stmt)
+        self._consume(TokenType.RIGHT_BRACE, "Expected '}' to close while body")
+        return WhileStatement(condition, body)
+    
+
+
 
     def _increment(self) -> Assignment:
      name = self._consume(
