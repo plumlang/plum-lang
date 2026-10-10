@@ -1,7 +1,10 @@
-branch int add(int a, int b) {
-    return a + b
-}
 
-plant int c = add(10,20)
-drop("sum is")
-drop(c)
+
+plant int a = 10
+
+
+drop(a)
+
+
+a = 50
+drop(a)
