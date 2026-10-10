@@ -55,8 +55,10 @@ class TokenType(Enum):
     ELSE = auto()
 
     #v0.9 - Loops (for loop , while loop )
-    FOR =auto()
-
+    FOR = auto()
+    WHILE = auto()
+    BREAK = auto()
+    CONTINUE = auto()
     AND = auto()   # &&
     OR = auto()    # ||
     NOT = auto()   # !

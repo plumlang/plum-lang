@@ -1,6 +1,8 @@
 from plum.plum_ast import *
 
 
+
+
 class Interpreter:
 
     def __init__(self):
@@ -10,6 +12,7 @@ class Interpreter:
         self.current_env = {}     # Current scope (local variables)
         self.scope_stack = []     # Stack of scopes for function calls
         self.return_value = None  # Return value from function
+        self.var_types = {}       # Track declared type per variable (NEW)
 
     def interpret(self, program: Program):
         """Execute the program"""
@@ -41,7 +44,40 @@ class Interpreter:
         else:
             self.current_env[name] = value
 
-
+    def _coerce_value(self, var_type: str, value, var_name: str):
+        """Type check and coerce value to declared type (NEW helper)"""
+        if value is None:
+            return None
+        
+        if var_type == 'int':
+            if not isinstance(value, (int, float)):
+                raise RuntimeError(
+                    f"Type error: Expected int, got {type(value).__name__} "
+                    f"for variable '{var_name}'"
+                )
+            return int(value)
+        elif var_type == 'str':
+            if not isinstance(value, str):
+                raise RuntimeError(
+                    f"Type error: Expected str, got {type(value).__name__} "
+                    f"for variable '{var_name}'"
+                )
+            return value
+        elif var_type == 'bool':
+            if not isinstance(value, bool):
+                raise RuntimeError(
+                    f"Type error: Expected bool, got {type(value).__name__} "
+                    f"for variable '{var_name}'"
+                )
+            return value
+        elif var_type == 'float':
+            if not isinstance(value, (int, float)):
+                raise RuntimeError(
+                    f"Type error: Expected float, got {type(value).__name__} "
+                    f"for variable '{var_name}'"
+                )
+            return float(value)
+        return value
 
     def _evaluate(self, node: ASTNode):
         """Evaluate an AST node and return its value"""
@@ -81,44 +117,17 @@ class Interpreter:
             if node.value is not None:
                 value = self._evaluate(node.value)
             
-            # Type checking
-            if node.var_type == 'int':
-                if value is not None and not isinstance(value, (int, float)):
-                    raise RuntimeError(
-                        f"Type error: Expected int, got {type(value).__name__} "
-                        f"for variable '{node.name}'"
-                    )
-                if value is not None:
-                    value = int(value)  # Convert to int if it's a float
-            elif node.var_type == 'str':
-                if value is not None and not isinstance(value, str):
-                    raise RuntimeError(
-                        f"Type error: Expected str, got {type(value).__name__} "
-                        f"for variable '{node.name}'"
-                    )
-            elif node.var_type == 'bool':
-                if value is not None and not isinstance(value, bool):
-                    raise RuntimeError(
-                        f"Type error: Expected bool, got {type(value).__name__} "
-                        f"for variable '{node.name}'"
-                    )
-            elif node.var_type == 'float':
-                if value is not None and not isinstance(value, (int, float)):
-                    raise RuntimeError(
-                        f"Type error: Expected float, got {type(value).__name__} "
-                        f"for variable '{node.name}'"
-                    )
-                if value is not None:
-                    value = float(value)  # Convert to float
+            # Type checking + coercion
+            value = self._coerce_value(node.var_type, value, node.name)
             
             # Store the variable in the appropriate scope
             if node.mutable:
                 # plant - mutable
                 if self.current_env != {}:
-                   #Inside a func - local
-                   self.current_env[node.name] = value
+                    # Inside a func - local
+                    self.current_env[node.name] = value
                 else:
-                    #globsl scope
+                    # global scope
                     self.global_env[node.name] = value
             else:
                 # root - immutable
@@ -127,10 +136,13 @@ class Interpreter:
                 
                 self.constants[node.name] = True
                 if self.current_env != {}:
-                    #inside a func - local constant
-                   self.current_env[node.name] = value
+                    # inside a func - local constant
+                    self.current_env[node.name] = value
                 else:
                     self.global_env[node.name] = value
+            
+            # NEW: Remember the declared type for future assignments
+            self.var_types[node.name] = node.var_type
             
             return value
 
@@ -142,16 +154,30 @@ class Interpreter:
         elif isinstance(node, Assignment):
             # Check if variable exists in current scope or global
             if node.name in self.current_env:
-                # Check if it's a constant in current scope
-                # Constants are tracked in self.constants globally
-                if node.name in self.constants:
-                   raise RuntimeError(f"Cannot reassign constant '{node.name}'")
-                self.current_env[node.name] = self._evaluate(node.value)
-            elif node.name in self.global_env:
-                # check if it's a constant
+                # Check if it's a constant
                 if node.name in self.constants:
                     raise RuntimeError(f"Cannot reassign constant '{node.name}'")
-                self.global_env[node.name] = self._evaluate(node.value)
+                
+                # Evaluate and re-apply type
+                value = self._evaluate(node.value)
+                if node.name in self.var_types:
+                    value = self._coerce_value(
+                        self.var_types[node.name], value, node.name
+                    )
+                self.current_env[node.name] = value
+                
+            elif node.name in self.global_env:
+                # Check if it's a constant
+                if node.name in self.constants:
+                    raise RuntimeError(f"Cannot reassign constant '{node.name}'")
+                
+                # Evaluate and re-apply type
+                value = self._evaluate(node.value)
+                if node.name in self.var_types:
+                    value = self._coerce_value(
+                        self.var_types[node.name], value, node.name
+                    )
+                self.global_env[node.name] = value
             else:
                 raise NameError(f"Undefined variable: '{node.name}'")
             return None
@@ -223,7 +249,7 @@ class Interpreter:
                     if self.return_value is not None:
                         break
             finally:
-                    # pop scopesel
+                    # pop scope
                     self._pop_scope()
                 
             # Check return type
@@ -244,7 +270,7 @@ class Interpreter:
                 self.return_value = None
             return self.return_value
     
-                # v0.8 - if/else statement
+        # v0.8 - if/else statement
         elif isinstance(node, IfStatement):
             condition = self._evaluate(node.condition)
 
@@ -274,6 +300,41 @@ class Interpreter:
 
             return None
         
+        # v0.9 extended
+        elif isinstance(node, WhileStatement):
+            """Execute a while loop"""
+            res = None
+            while True:
+                # eval condition 
+                condition_value = self._evaluate(node.condition)
+
+                # Convert to boolean if needed 
+                if not isinstance(condition_value, bool):
+                   # For non-boolean values, check truthiness
+                    if condition_value == 0 or condition_value == "" or condition_value is None:
+                        break
+                elif not condition_value:
+                    break
+
+                # execute body 
+                try:
+                    for stmt in node.body:
+                        self._evaluate(stmt)
+                        # check for return value (inside func)
+                        if self.return_value is not None:
+                            return self.return_value
+                except BreakException:
+                    break
+                except ContinueException:
+                    continue
+            return res
+                
+        elif isinstance(node, BreakStatement):
+            raise BreakException()
+
+        elif isinstance(node, ContinueStatement):
+            raise ContinueException()       
+
         # Binary operation
         elif isinstance(node, BinaryOperation):
             left_val = self._evaluate(node.left)
@@ -317,8 +378,6 @@ class Interpreter:
                 raise RuntimeError(
                     f"Unknown operator: {node.operator}"
                 )
-
-
         
         else:
             raise RuntimeError(
