@@ -1,10 +1,14 @@
+branch int getAge() {
+    return 25
+}
+
+branch str getName() {
+    return "Subhro"
+}
+
+branch bool isActive() {
+    return true
+}
 
 
-plant int a = 10
-
-
-drop(a)
-
-
-a = 50
-drop(a)
+drop(getAge())

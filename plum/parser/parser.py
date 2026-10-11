@@ -40,6 +40,9 @@ class Parser:
             return self._advance()
         raise SyntaxError(f"{message} at line {self._peek().line}")
 
+    # ---------------------------------------------------------------
+    # PRIMARY
+    # ---------------------------------------------------------------
     def _primary(self) -> ASTNode:
         # Handle parentheses
         if self._match(TokenType.LEFT_PAREN):
@@ -64,11 +67,11 @@ class Parser:
         # Variable reference or function call
         if self._match(TokenType.IDENTIFIER):
             name = self._previous().value
-            
+
             # Check if it's a function call: identifier(
             if self._check(TokenType.LEFT_PAREN):
                 return self._finish_call(name)
-            
+
             return VariableReference(name)
 
         raise SyntaxError(
@@ -78,27 +81,80 @@ class Parser:
     def _finish_call(self, name: str) -> FunctionCall:
         """Finish parsing a function call after the opening paren"""
         arguments = []
-        
+
         self._consume(TokenType.LEFT_PAREN, "Expected '(' after function name")
-        
+
         # Parse arguments if any
         if not self._check(TokenType.RIGHT_PAREN):
             while True:
                 arguments.append(self._expression())
                 if not self._match(TokenType.COMMA):
                     break
-        
+
         self._consume(TokenType.RIGHT_PAREN, "Expected ')' after arguments")
         return FunctionCall(name, arguments)
 
+    # ---------------------------------------------------------------
+    # POSTFIX  (x++ , x--)
+    # ---------------------------------------------------------------
+    def _postfix(self) -> ASTNode:
+        """Parse postfix operators: x++, x--"""
+        expr = self._primary()
+
+        while self._match(TokenType.INCREMENT, TokenType.DECREMENT):
+            operator = self._previous().value
+            if not isinstance(expr, VariableReference):
+                raise SyntaxError(
+                    f"'{operator}' can only be applied to a variable "
+                    f"at line {self._peek().line}"
+                )
+            expr = IncrementDecrement(expr.name, operator, is_prefix=False)
+
+        return expr
+
+    # ---------------------------------------------------------------
+    # UNARY  (-x, !x, ++x, --x)
+    # ---------------------------------------------------------------
+    def _unary(self) -> ASTNode:
+        """Parse prefix operators: -x, !x, ++x, --x"""
+
+        # Unary minus
+        if self._match(TokenType.MINUS):
+            operator = self._previous().value
+            operand = self._unary()
+            return UnaryOperation(operator, operand)
+
+        # Logical NOT
+        if self._match(TokenType.NOT):
+            operator = self._previous().value
+            operand = self._unary()
+            return UnaryOperation(operator, operand)
+
+        # Pre-increment / pre-decrement
+        if self._match(TokenType.INCREMENT, TokenType.DECREMENT):
+            operator = self._previous().value
+            name_token = self._consume(
+                TokenType.IDENTIFIER,
+                f"Expected variable after '{operator}'"
+            )
+            return IncrementDecrement(name_token.value, operator, is_prefix=True)
+
+        return self._postfix()
+
+    # ---------------------------------------------------------------
+    # POWER  (**)
+    # ---------------------------------------------------------------
     def _power(self) -> ASTNode:
-        left = self._primary()
+        left = self._unary()
         while self._match(TokenType.POWER):
             operator = self._previous().value
-            right = self._primary()
+            right = self._unary()
             left = BinaryOperation(left, operator, right)
         return left
 
+    # ---------------------------------------------------------------
+    # MULTIPLICATION  (* / % //)
+    # ---------------------------------------------------------------
     def _multiplication(self) -> ASTNode:
         left = self._power()
         while self._match(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT, TokenType.DOUBLE_SLASH):
@@ -107,6 +163,9 @@ class Parser:
             left = BinaryOperation(left, operator, right)
         return left
 
+    # ---------------------------------------------------------------
+    # ADDITION  (+ -)
+    # ---------------------------------------------------------------
     def _addition(self) -> ASTNode:
         left = self._multiplication()
         while self._match(TokenType.PLUS, TokenType.MINUS):
@@ -115,6 +174,9 @@ class Parser:
             left = BinaryOperation(left, operator, right)
         return left
 
+    # ---------------------------------------------------------------
+    # COMPARISON  (== != > < >= <=)
+    # ---------------------------------------------------------------
     def _comparison(self) -> ASTNode:
         left = self._addition()
         while self._match(
@@ -130,6 +192,9 @@ class Parser:
     def _expression(self) -> ASTNode:
         return self._comparison()
 
+    # ---------------------------------------------------------------
+    # PRINT  (drop(...))
+    # ---------------------------------------------------------------
     def _print_statement(self) -> PrintStatement:
         self._consume(
             TokenType.LEFT_PAREN,
@@ -145,6 +210,9 @@ class Parser:
 
         return PrintStatement(expr)
 
+    # ---------------------------------------------------------------
+    # VARIABLE DECLARATION  (plant int x = 5 / root int x = 5)
+    # ---------------------------------------------------------------
     def _variable_declaration(self, mutable: bool) -> VariableDeclaration:
         # Parse the type
         if self._match(TokenType.INT):
@@ -169,6 +237,9 @@ class Parser:
 
         return VariableDeclaration(mutable, var_type, name, value)
 
+    # ---------------------------------------------------------------
+    # ASSIGNMENT  (x = 5)
+    # ---------------------------------------------------------------
     def _assignment(self) -> Assignment:
         name_token = self._consume(TokenType.IDENTIFIER, "Expected variable name for assignment")
         name = name_token.value
@@ -178,20 +249,26 @@ class Parser:
 
         return Assignment(name, value)
 
+    # ---------------------------------------------------------------
+    # RETURN
+    # ---------------------------------------------------------------
     def _return_statement(self) -> ReturnStatement:
         """Parse return statement: return x + 5"""
         # The RETURN token has already been consumed by _match() in _statement()
         # Check if it's an empty return (just 'return' with no value)
         if self._check(TokenType.RIGHT_BRACE):
             return ReturnStatement(None)
-        
+
         value = self._expression()
         return ReturnStatement(value)
 
+    # ---------------------------------------------------------------
+    # FUNCTION PARAMETERS
+    # ---------------------------------------------------------------
     def _parse_params(self) -> List[tuple]:
         """Parse function parameters: int a, str b, bool c"""
         params = []
-        
+
         if not self._check(TokenType.RIGHT_PAREN):
             while True:
                 # Parse parameter type
@@ -205,19 +282,22 @@ class Parser:
                     param_type = 'float'
                 else:
                     raise SyntaxError(f"Expected type in parameter list at line {self._peek().line}")
-                
+
                 # Parse parameter name
                 name_token = self._consume(TokenType.IDENTIFIER, "Expected parameter name")
                 params.append((param_type, name_token.value))
-                
+
                 if not self._match(TokenType.COMMA):
                     break
-        
+
         return params
 
+    # ---------------------------------------------------------------
+    # FUNCTION DECLARATION  (branch int add(int a, int b) { ... })
+    # ---------------------------------------------------------------
     def _function_declaration(self) -> FunctionDeclaration:
         """Parse function: branch int add(int a, int b) { ... }"""
-        
+
         # Parse return type
         if self._match(TokenType.INT):
             return_type = 'int'
@@ -231,30 +311,32 @@ class Parser:
             return_type = 'void'
         else:
             raise SyntaxError(f"Expected return type at line {self._peek().line}")
-        
+
         # Parse function name
         name_token = self._consume(TokenType.IDENTIFIER, "Expected function name")
         name = name_token.value
-        
+
         # Parse parameters
         self._consume(TokenType.LEFT_PAREN, "Expected '(' after function name")
         params = self._parse_params()
         self._consume(TokenType.RIGHT_PAREN, "Expected ')' after parameters")
-        
+
         # Parse function body
         self._consume(TokenType.LEFT_BRACE, "Expected '{' for function body")
         body = []
-        
+
         # Parse statements inside the function body
         while not self._check(TokenType.RIGHT_BRACE) and not self._is_at_end():
             stmt = self._statement()
             body.append(stmt)
-        
+
         self._consume(TokenType.RIGHT_BRACE, "Expected '}' to close function body")
-        
+
         return FunctionDeclaration(return_type, name, params, body)
-    
-    # v0.8 - parse if/else statement
+
+    # ---------------------------------------------------------------
+    # IF / ELSE
+    # ---------------------------------------------------------------
     def _if_statement(self) -> IfStatement:
         # if (condition)
         self._consume(
@@ -316,60 +398,32 @@ class Parser:
             then_branch=then_branch,
             else_branch=else_branch
         )
-    def _statement(self) -> ASTNode:
-        # Function declaration
-        if self._match(TokenType.BRANCH):
-            return self._function_declaration()
-        
-        # Return statement - MATCH and CONSUME the RETURN token here
-        if self._match(TokenType.RETURN):
-            return self._return_statement()
-        
-        # Variable declaration
-        if self._match(TokenType.PLANT):
-            return self._variable_declaration(mutable=True)
-        if self._match(TokenType.ROOT):
-            return self._variable_declaration(mutable=False)
 
-        # Variable assignment
-        if self._check(TokenType.IDENTIFIER):
-            if (self.current + 1 < len(self.tokens) and 
-                self.tokens[self.current + 1].type == TokenType.EQUALS):
-                return self._assignment()
-
-        # Print statement
-        if self._match(TokenType.DROP):
-            return self._print_statement()
-
-        # v0.8 - if/else statement
-        if self._match(TokenType.IF):
-           return self._if_statement()
-
-        #v0.9 - Loops (for)
-        if self._check(TokenType.FOR):
-            return self._for_statement()
-        
-        #v0.9 extended while loop
-        if self._match(TokenType.WHILE):
-            return self._while_statement()
-
-        # Expression (including function calls)
-        return self._expression()
-
+    # ---------------------------------------------------------------
+    # FOR LOOP
+    # ---------------------------------------------------------------
     def _for_statement(self) -> ForStatement:
-        # for (
+        # for
         self._consume(
             TokenType.FOR,
             "Expected 'for'"
         )
 
+        # (
         self._consume(
             TokenType.LEFT_PAREN,
             "Expected '(' after 'for'"
         )
 
         # initializer
-        initializer = self._statement()
+        initializer = None
+        if not self._check(TokenType.SEMICOLON):
+            if self._match(TokenType.PLANT):
+                initializer = self._variable_declaration(mutable=True)
+            elif self._match(TokenType.ROOT):
+                initializer = self._variable_declaration(mutable=False)
+            else:
+                initializer = self._statement()
 
         self._consume(
             TokenType.SEMICOLON,
@@ -377,15 +431,19 @@ class Parser:
         )
 
         # condition
-        condition = self._expression()
+        condition = None
+        if not self._check(TokenType.SEMICOLON):
+            condition = self._expression()
 
         self._consume(
             TokenType.SEMICOLON,
             "Expected ';' after for condition"
         )
 
-        # increment
-        increment = self._increment()
+        # increment  (now handled by _expression → _unary/_postfix)
+        increment = None
+        if not self._check(TokenType.RIGHT_PAREN):
+            increment = self._expression()
 
         self._consume(
             TokenType.RIGHT_PAREN,
@@ -415,50 +473,78 @@ class Parser:
             body=body
         )
 
-    #v0.9 extended 
+    # ---------------------------------------------------------------
+    # WHILE LOOP
+    # ---------------------------------------------------------------
     def _while_statement(self) -> WhileStatement:
-        """Parse while loop: while condition { body }"""
+        """Parse while loop: while (condition) { body }"""
 
-        #consume '('
-        self._consume(TokenType.LEFT_PAREN, "Expected '(' after while condition")
+        # consume '('
+        self._consume(TokenType.LEFT_PAREN, "Expected '(' after 'while'")
 
-        #parse the condition 
+        # parse the condition
         condition = self._expression()
-        
+
         self._consume(TokenType.RIGHT_PAREN, "Expected ')' after while condition")
-        # parse the body 
-        
-        self._consume(TokenType.LEFT_BRACE,"Expected '{' after while condition")
+
+        # parse the body
+        self._consume(TokenType.LEFT_BRACE, "Expected '{' after while condition")
 
         body = []
         while not self._check(TokenType.RIGHT_BRACE) and not self._is_at_end():
-                stmt = self._statement()
-                body.append(stmt)
+            stmt = self._statement()
+            body.append(stmt)
+
         self._consume(TokenType.RIGHT_BRACE, "Expected '}' to close while body")
+
         return WhileStatement(condition, body)
-    
 
+    # ---------------------------------------------------------------
+    # STATEMENT DISPATCH
+    # ---------------------------------------------------------------
+    def _statement(self) -> ASTNode:
+        # Function declaration
+        if self._match(TokenType.BRANCH):
+            return self._function_declaration()
 
+        # Return statement
+        if self._match(TokenType.RETURN):
+            return self._return_statement()
 
-    def _increment(self) -> Assignment:
-     name = self._consume(
-        TokenType.IDENTIFIER,
-        "Expected variable name in for increment"
-    )
+        # Variable declaration
+        if self._match(TokenType.PLANT):
+            return self._variable_declaration(mutable=True)
+        if self._match(TokenType.ROOT):
+            return self._variable_declaration(mutable=False)
 
-     self._consume(
-        TokenType.INCREAMENT,
-        "Expected '++' after variable"
-    )
+        # Variable assignment
+        if self._check(TokenType.IDENTIFIER):
+            if (self.current + 1 < len(self.tokens) and
+                    self.tokens[self.current + 1].type == TokenType.EQUALS):
+                return self._assignment()
 
-     return Assignment(
-        name=name.value,
-        value=BinaryOperation(
-            left=VariableReference(name=name.value),
-            operator="+",
-            right=NumberLiteral(value=1)
-        )
-    )
+        # Print statement
+        if self._match(TokenType.DROP):
+            return self._print_statement()
+
+        # if/else
+        if self._match(TokenType.IF):
+            return self._if_statement()
+
+        # for loop
+        if self._match(TokenType.FOR):
+            return self._for_statement()
+
+        # while loop
+        if self._match(TokenType.WHILE):
+            return self._while_statement()
+
+        # Expression (including function calls, ++, --, etc.)
+        return self._expression()
+
+    # ---------------------------------------------------------------
+    # ENTRY POINT
+    # ---------------------------------------------------------------
     def parse(self) -> Program:
         statements = []
         while not self._is_at_end():
