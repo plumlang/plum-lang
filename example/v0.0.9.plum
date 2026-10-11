@@ -1,0 +1,3 @@
+plant int a = 5
+drop(a++)   
+drop(a)     

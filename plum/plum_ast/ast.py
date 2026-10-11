@@ -100,6 +100,27 @@ class ReturnStatement(ASTNode):
      """Return statement: return x + 5"""
      value: Optional[ASTNode] = None
 
+@dataclass 
+class IncrementDecrement(ASTNode):
+     """Pre/post increment or decrement: ++x, x++, --x, x-- """
+     name: str
+     operator: str
+     is_prefix: bool
+     
+@dataclass
+class UnaryOperation(ASTNode):
+    operator: str
+    operand: ASTNode
+
+@dataclass
+class BreakStatement(ASTNode):
+    pass
+
+@dataclass
+class ContinueStatement(ASTNode):
+    pass
+
+
 # v0.9 — Loop control AST nodes (NEW — ADD THESE)
 @dataclass
 class BreakStatement(ASTNode):
@@ -110,6 +131,8 @@ class BreakStatement(ASTNode):
 class ContinueStatement(ASTNode):
     """Continue statement: continue"""
     pass
+
+
 
 # Python exceptions used at runtime (already in your file)
 class BreakException(Exception):

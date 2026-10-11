@@ -48,7 +48,7 @@ class TokenType(Enum):
     RIGHT_BRACE = auto();
     COMMA = auto();
     SEMICOLON =auto()
-    INCREAMENT = auto() # ++
+    
     
     # v0.8 - Conditionals
     IF = auto()
@@ -62,3 +62,8 @@ class TokenType(Enum):
     AND = auto()   # &&
     OR = auto()    # ||
     NOT = auto()   # !
+
+
+    # v0.10 Increment / Decrement
+    INCREMENT = auto()      # ++
+    DECREMENT = auto() 
