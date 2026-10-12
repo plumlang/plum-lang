@@ -1,24 +1,40 @@
-drop ("--- TEST 1: AND ---")
-if (good && good) {
-    drop ("AND WORKS")
-}
-
-drop ("--- TEST 2: AND FALSE ---")
+drop ("--- EDGE TEST 1: AND FALSE CASE ---")
 if (good && bad) {
-    drop ("SHOULD NOT PRINT")
+    drop ("FAIL: AND")
+} else {
+    drop ("PASS: AND false")
 }
 
-drop ("--- TEST 3: OR ---")
-if (bad || good) {
-    drop ("OR WORKS")
-}
-
-drop ("--- TEST 4: OR FALSE ---")
+drop ("--- EDGE TEST 2: OR FALSE CASE ---")
 if (bad || bad) {
-    drop ("SHOULD NOT PRINT")
+    drop ("FAIL: OR")
+} else {
+    drop ("PASS: OR false")
 }
 
-drop ("--- TEST 5: COMBINED ---")
-if (good && good || bad) {
-    drop ("COMBINED WORKS")
+drop ("--- EDGE TEST 3: DOUBLE NOT ---")
+if (!!good) {
+    drop ("PASS: double NOT")
 }
+
+drop ("--- EDGE TEST 4: PARENTHESES ---")
+if ((good || bad) && good) {
+    drop ("PASS: parentheses")
+}
+
+drop ("--- EDGE TEST 5: PRECEDENCE ---")
+if (good || bad && bad) {
+    drop ("PASS: AND before OR")
+}
+
+drop ("--- EDGE TEST 6: NOT WITH COMPARISON ---")
+if (!(5 == 3)) {
+    drop ("PASS: NOT comparison")
+}
+
+drop ("--- EDGE TEST 7: COMBINED COMPARISONS ---")
+if (5 > 3 && 2 < 4) {
+    drop ("PASS: comparisons with AND")
+}
+
+drop ("--- EDGE TESTS FINISHED ---")
