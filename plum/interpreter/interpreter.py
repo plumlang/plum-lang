@@ -1,4 +1,5 @@
 from plum.plum_ast import *
+from plum.plum_ast.ast import UnaryOperation
 
 
 class BreakException(Exception):
@@ -382,6 +383,15 @@ class Interpreter:
             else:
                 raise RuntimeError(f"Unknown unary operator: {node.operator}")
 
+        # Unary operation (logical NOT)
+        elif isinstance(node, UnaryOperation):
+            operand_val = self._evaluate(node.operand)
+
+            if node.operator == '!':
+                return not bool(operand_val)
+
+            raise RuntimeError(f"Unknown unary operator: {node.operator}")
+        
         # Binary operation
         elif isinstance(node, BinaryOperation):
             left_val = self._evaluate(node.left)

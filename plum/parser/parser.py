@@ -190,6 +190,36 @@ class Parser:
         return left
 
     def _expression(self) -> ASTNode:
+        return self._or()
+
+    # Logical OR (||) — lowest logical precedence
+    def _or(self) -> ASTNode:
+        left = self._and()
+
+        while self._match(TokenType.OR):
+            operator = self._previous().value
+            right = self._and()
+            left = BinaryOperation(left, operator, right)
+
+        return left
+
+    # Logical AND (&&)
+    def _and(self) -> ASTNode:
+        left = self._not()
+
+        while self._match(TokenType.AND):
+            operator = self._previous().value
+            right = self._not()
+            left = BinaryOperation(left, operator, right)
+
+        return left
+
+    # Logical NOT (!) — highest logical precedence
+    def _not(self) -> ASTNode:
+        if self._match(TokenType.NOT):
+            operator = self._previous().value
+            return UnaryOperation(operator, self._not())
+
         return self._comparison()
 
     # ---------------------------------------------------------------
