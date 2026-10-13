@@ -373,24 +373,31 @@ class Interpreter:
             # Prefix returns new, postfix returns old
             return new_value if node.is_prefix else old_value
 
-        # NEW: Unary operation (-x, !x)
+        # Unary operations: arithmetic, logical, and bitwise
         elif isinstance(node, UnaryOperation):
             operand = self._evaluate(node.operand)
+
             if node.operator == '-':
                 return -operand
             elif node.operator == '!':
-                return not operand
+                return not bool(operand)
+
+            elif node.operator == '~':
+                if (
+                    isinstance(operand, bool)
+                    or not isinstance(operand, (int, float))
+                    or int(operand) != operand
+                ):
+                    raise RuntimeError(
+                        "Operator '~' requires an integer operand"
+                    )
+                return ~int(operand)
+
             else:
-                raise RuntimeError(f"Unknown unary operator: {node.operator}")
+                raise RuntimeError(
+                    f"Unknown unary operator: {node.operator}"
+                )
 
-        # Unary operation (logical NOT)
-        elif isinstance(node, UnaryOperation):
-            operand_val = self._evaluate(node.operand)
-
-            if node.operator == '!':
-                return not bool(operand_val)
-
-            raise RuntimeError(f"Unknown unary operator: {node.operator}")
         
         # Binary operation
         elif isinstance(node, BinaryOperation):
@@ -417,6 +424,32 @@ class Interpreter:
                 return left_val // right_val
             elif node.operator == '**':
                 return left_val ** right_val
+            
+
+            # Bitwise operators require whole-number operands
+            elif node.operator in ('&', '|', '^'):
+                if (
+                    isinstance(left_val, bool)
+                    or isinstance(right_val, bool)
+                    or not isinstance(left_val, (int, float))
+                    or not isinstance(right_val, (int, float))
+                    or int(left_val) != left_val
+                    or int(right_val) != right_val
+                ):
+                    raise RuntimeError(
+                        f"Operator '{node.operator}' requires integer operands"
+                    )
+
+                left_val = int(left_val)
+                right_val = int(right_val)
+
+                if node.operator == '&':
+                    return left_val & right_val
+                elif node.operator == '|':
+                    return left_val | right_val
+                else:
+                    return left_val ^ right_val
+
             elif node.operator == '==':
                 return left_val == right_val
             elif node.operator == '!=':
