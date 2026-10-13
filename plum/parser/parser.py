@@ -215,15 +215,20 @@ class Parser:
     # COMPARISON  (== != > < >= <=)
     # ---------------------------------------------------------------
     def _comparison(self) -> ASTNode:
-        left = self._addition()
+        left = self._bitwise_or()
+
         while self._match(
-            TokenType.EQUAL_EQUAL, TokenType.NOT_EQUAL,
-            TokenType.GREATER, TokenType.GREATER_EQUAL,
-            TokenType.LESS, TokenType.LESS_EQUAL
+            TokenType.GREATER,
+            TokenType.GREATER_EQUAL,
+            TokenType.LESS,
+            TokenType.LESS_EQUAL,
+            TokenType.EQUAL_EQUAL,
+            TokenType.NOT_EQUAL
         ):
             operator = self._previous().value
-            right = self._addition()
+            right = self._bitwise_or()
             left = BinaryOperation(left, operator, right)
+
         return left
 
     def _expression(self) -> ASTNode:
