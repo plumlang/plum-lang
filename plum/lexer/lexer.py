@@ -92,16 +92,27 @@ class Lexer:
                 self.position += 1
                 continue
 
-            # Logical AND (&&)
+
+            # Bitwise AND (&) and logical AND (&&)
             if current == '&':
                 if self.position + 1 < len(self.source) and self.source[self.position + 1] == '&':
                     self.tokens.append(Token(TokenType.AND, '&&', self.line))
                     self.position += 2
-                    continue
+                else:
+                    self.tokens.append(Token(TokenType.BITWISE_AND, '&', self.line))
+                    self.position += 1
+                continue
 
-                raise SyntaxError(
-                    f"Unexpected character '&' on line {self.line}"
-                )
+            # Bitwise OR (|) and logical OR (||) v0.10
+            if current == '|':
+                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '|':
+                    self.tokens.append(Token(TokenType.OR, '||', self.line))
+                    self.position += 2
+                else:
+                    self.tokens.append(Token(TokenType.BITWISE_OR, '|', self.line))
+                    self.position += 1
+                continue
+
 
             # Logical OR (||)
             if current == '|':
@@ -113,6 +124,20 @@ class Lexer:
                 raise SyntaxError(
                     f"Unexpected character '|' on line {self.line}"
                 )
+
+            
+            # Bitwise XOR (^) v0.10
+            if current == '^':
+                self.tokens.append(Token(TokenType.BITWISE_XOR, '^', self.line))
+                self.position += 1
+                continue
+
+            # Bitwise NOT (~) v0.10
+            if current == '~':
+                self.tokens.append(Token(TokenType.BITWISE_NOT, '~', self.line))
+                self.position += 1
+                continue
+
 
             # Not equal (!=) and logical NOT (!)
             if current == '!':

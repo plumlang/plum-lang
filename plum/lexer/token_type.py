@@ -67,3 +67,9 @@ class TokenType(Enum):
     # v0.10 Increment / Decrement
     INCREMENT = auto()      # ++
     DECREMENT = auto() 
+
+    #v0.10 Bitwise Operators 
+    BITWISE_AND = auto()
+    BITWISE_OR = auto()
+    BITWISE_XOR = auto()
+    BITWISE_NOT = auto()
