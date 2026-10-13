@@ -115,8 +115,9 @@ class Parser:
     # ---------------------------------------------------------------
     # UNARY  (-x, !x, ++x, --x)
     # ---------------------------------------------------------------
+
     def _unary(self) -> ASTNode:
-        """Parse prefix operators: -x, !x, ++x, --x"""
+        """Parse prefix operators: -x, !x, ~x, ++x, --x"""
 
         # Unary minus
         if self._match(TokenType.MINUS):
@@ -126,6 +127,12 @@ class Parser:
 
         # Logical NOT
         if self._match(TokenType.NOT):
+            operator = self._previous().value
+            operand = self._unary()
+            return UnaryOperation(operator, operand)
+
+        # Bitwise NOT
+        if self._match(TokenType.BITWISE_NOT):
             operator = self._previous().value
             operand = self._unary()
             return UnaryOperation(operator, operand)
@@ -140,6 +147,7 @@ class Parser:
             return IncrementDecrement(name_token.value, operator, is_prefix=True)
 
         return self._postfix()
+
 
     # ---------------------------------------------------------------
     # POWER  (**)
@@ -173,6 +181,35 @@ class Parser:
             right = self._multiplication()
             left = BinaryOperation(left, operator, right)
         return left
+
+    
+    # Bitwise AND (&)
+    def _bitwise_and(self) -> ASTNode:
+        left = self._addition()
+        while self._match(TokenType.BITWISE_AND):
+            operator = self._previous().value
+            right = self._addition()
+            left = BinaryOperation(left, operator, right)
+        return left
+
+    # Bitwise XOR (^) has lower precedence than AND
+    def _bitwise_xor(self) -> ASTNode:
+        left = self._bitwise_and()
+        while self._match(TokenType.BITWISE_XOR):
+            operator = self._previous().value
+            right = self._bitwise_and()
+            left = BinaryOperation(left, operator, right)
+        return left
+
+    # Bitwise OR (|) has lower precedence than XOR
+    def _bitwise_or(self) -> ASTNode:
+        left = self._bitwise_xor()
+        while self._match(TokenType.BITWISE_OR):
+            operator = self._previous().value
+            right = self._bitwise_xor()
+            left = BinaryOperation(left, operator, right)
+        return left
+
 
     # ---------------------------------------------------------------
     # COMPARISON  (== != > < >= <=)
