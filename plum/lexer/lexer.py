@@ -149,25 +149,45 @@ class Lexer:
                     self.position += 1
                 continue
 
-            # Greater than and greater than or equal
+
+            # Greater than, greater than or equal, and right shift
             if current == '>':
-                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
-                    self.tokens.append(Token(TokenType.GREATER_EQUAL, '>=', self.line))
-                    self.position += 2
+                if self.position + 1 < len(self.source):
+                    next_char = self.source[self.position + 1]
+
+                    if next_char == '>':
+                        self.tokens.append(Token(TokenType.BITWISE_RIGHT_SHIFT, '>>', self.line))
+                        self.position += 2
+                    elif next_char == '=':
+                        self.tokens.append(Token(TokenType.GREATER_EQUAL, '>=', self.line))
+                        self.position += 2
+                    else:
+                        self.tokens.append(Token(TokenType.GREATER, '>', self.line))
+                        self.position += 1
                 else:
                     self.tokens.append(Token(TokenType.GREATER, '>', self.line))
                     self.position += 1
                 continue
 
-            # Less than and less than or equal
+            # Less than, less than or equal, and left shift
             if current == '<':
-                 if self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
-                     self.tokens.append(Token(TokenType.LESS_EQUAL, '<=', self.line))
-                     self.position += 2
-                 else:
-                     self.tokens.append(Token(TokenType.LESS, '<', self.line))
-                     self.position += 1
-                 continue
+                if self.position + 1 < len(self.source):
+                    next_char = self.source[self.position + 1]
+
+                    if next_char == '<':
+                        self.tokens.append(Token(TokenType.BITWISE_LEFT_SHIFT, '<<', self.line))
+                        self.position += 2
+                    elif next_char == '=':
+                        self.tokens.append(Token(TokenType.LESS_EQUAL, '<=', self.line))
+                        self.position += 2
+                    else:
+                        self.tokens.append(Token(TokenType.LESS, '<', self.line))
+                        self.position += 1
+                else:
+                    self.tokens.append(Token(TokenType.LESS, '<', self.line))
+                    self.position += 1
+                continue
+
 
             # left paren 
             if current == '(':
