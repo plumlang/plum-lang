@@ -1,0 +1,21 @@
+# Basic shifts
+drop(5 << 1)
+drop(20 >> 2)
+
+# Comparisons still work
+drop(5 < 10)
+drop(5 <= 5)
+drop(10 > 5)
+drop(10 >= 10)
+
+# Edge cases
+drop(5 << 0)
+drop(16 >> 4)
+drop(-8 >> 1)
+drop(3 << 2)
+
+# Precedence
+drop(2 + 3 << 1)
+drop(1 << 2 + 1)
+drop(8 >> 1 + 1)
+drop(8 & 3 << 1)

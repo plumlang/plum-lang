@@ -450,6 +450,34 @@ class Interpreter:
                 else:
                     return left_val ^ right_val
 
+
+                
+            # Bitwise shifts require integer operands
+            elif node.operator in ('<<', '>>'):
+                if (
+                    isinstance(left_val, bool)
+                    or isinstance(right_val, bool)
+                    or not isinstance(left_val, (int, float))
+                    or not isinstance(right_val, (int, float))
+                    or int(left_val) != left_val
+                    or int(right_val) != right_val
+                ):
+                    raise RuntimeError(
+                        f"Operator '{node.operator}' requires integer operands"
+                    )
+
+                shift = int(right_val)
+
+                if shift < 0:
+                    raise RuntimeError("Shift count cannot be negative")
+
+                left_val = int(left_val)
+
+                if node.operator == '<<':
+                    return left_val << shift
+                else:
+                    return left_val >> shift
+
             elif node.operator == '==':
                 return left_val == right_val
             elif node.operator == '!=':

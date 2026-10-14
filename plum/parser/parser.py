@@ -183,12 +183,26 @@ class Parser:
         return left
 
     
-    # Bitwise AND (&)
-    def _bitwise_and(self) -> ASTNode:
+    # Bitwise shifts (<<, >>)
+    def _shift(self) -> ASTNode:
         left = self._addition()
-        while self._match(TokenType.BITWISE_AND):
+
+        while self._match(
+            TokenType.BITWISE_LEFT_SHIFT,
+            TokenType.BITWISE_RIGHT_SHIFT
+        ):
             operator = self._previous().value
             right = self._addition()
+            left = BinaryOperation(left, operator, right)
+
+        return left
+
+    # Bitwise AND (&)
+    def _bitwise_and(self) -> ASTNode:
+        left = self._shift()
+        while self._match(TokenType.BITWISE_AND):
+            operator = self._previous().value
+            right = self._shift()
             left = BinaryOperation(left, operator, right)
         return left
 

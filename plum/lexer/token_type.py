@@ -73,3 +73,6 @@ class TokenType(Enum):
     BITWISE_OR = auto()
     BITWISE_XOR = auto()
     BITWISE_NOT = auto()
+
+    BITWISE_LEFT_SHIFT = auto()
+    BITWISE_RIGHT_SHIFT = auto()
