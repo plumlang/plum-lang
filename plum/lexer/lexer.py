@@ -40,6 +40,9 @@ class Lexer:
                 if self.position + 1 < len(self.source) and self.source[self.position + 1] == '+':
                     self.tokens.append(Token(TokenType.INCREMENT, '++', self.line))
                     self.position += 2
+                elif self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
+                    self.tokens.append(Token(TokenType.PLUS_EQUALS, '+=', self.line))
+                    self.position += 2
                 else:
                     self.tokens.append(Token(TokenType.PLUS, '+', self.line))
                     self.position += 1
@@ -57,8 +60,11 @@ class Lexer:
 
             # Subtraction operator (-)
             if current == '-':
-                if self.position + 1 < len(self.source) and self.source[self.position+1] == '-':
+                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '-':
                     self.tokens.append(Token(TokenType.DECREMENT, '--', self.line))
+                    self.position += 2
+                elif self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
+                    self.tokens.append(Token(TokenType.MINUS_EQUALS, '-=', self.line))
                     self.position += 2
                 else:
                     self.tokens.append(Token(TokenType.MINUS, '-', self.line))
@@ -71,6 +77,9 @@ class Lexer:
                 if self.position + 1 < len(self.source) and self.source[self.position + 1] == '*':
                     self.tokens.append(Token(TokenType.POWER, '**', self.line))
                     self.position += 2
+                elif self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
+                    self.tokens.append(Token(TokenType.STAR_EQUALS, '*=', self.line))
+                    self.position += 2
                 else:
                     self.tokens.append(Token(TokenType.STAR, '*', self.line))
                     self.position += 1
@@ -81,6 +90,9 @@ class Lexer:
                 if self.position + 1 < len(self.source) and self.source[self.position + 1] == '/':
                     self.tokens.append(Token(TokenType.DOUBLE_SLASH, '//', self.line))
                     self.position += 2
+                elif self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
+                    self.tokens.append(Token(TokenType.SLASH_EQUALS, '/=', self.line))
+                    self.position += 2
                 else:
                     self.tokens.append(Token(TokenType.SLASH, '/', self.line))
                     self.position += 1
@@ -88,8 +100,12 @@ class Lexer:
 
             # Modulo operator (%)
             if current == '%':
-                self.tokens.append(Token(TokenType.PERCENT, '%', self.line))
-                self.position += 1
+                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
+                    self.tokens.append(Token(TokenType.PERCENT_EQUALS, '%=', self.line))
+                    self.position += 2
+                else:
+                    self.tokens.append(Token(TokenType.PERCENT, '%', self.line))
+                    self.position += 1
                 continue
 
 

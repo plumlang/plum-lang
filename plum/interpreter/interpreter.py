@@ -191,6 +191,46 @@ class Interpreter:
                 raise NameError(f"Undefined variable: '{node.name}'")
             return None
 
+        
+        # Compound assignment v0.10: x += 5, x -= 2, etc.
+        elif isinstance(node, CompoundAssignment):
+            if node.name in self.current_env:
+                scope = self.current_env
+            elif node.name in self.global_env:
+                scope = self.global_env
+            else:
+                raise NameError(f"Undefined variable: '{node.name}'")
+
+            if node.name in self.constants:
+                raise RuntimeError(f"Cannot reassign constant '{node.name}'")
+
+            old_value = scope[node.name]
+            right_value = self._evaluate(node.value)
+
+            if node.operator == '+=':
+                new_value = old_value + right_value
+            elif node.operator == '-=':
+                new_value = old_value - right_value
+            elif node.operator == '*=':
+                new_value = old_value * right_value
+            elif node.operator == '/=':
+                new_value = old_value / right_value
+            elif node.operator == '%=':
+                new_value = old_value % right_value
+            else:
+                raise RuntimeError(
+                    f"Unsupported compound assignment: '{node.operator}'"
+                )
+
+            if node.name in self.var_types:
+                new_value = self._coerce_value(
+                    self.var_types[node.name], new_value, node.name
+                )
+
+            scope[node.name] = new_value
+            return None
+
+
         # Function declaration
         elif isinstance(node, FunctionDeclaration):
             self.functions[node.name] = node
