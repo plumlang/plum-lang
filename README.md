@@ -1,4 +1,3 @@
-
 # 🍑 Plum Programming Language
 
 A lightweight interpreted programming language built from scratch in Python to explore compiler design, parsing, and language implementation.
@@ -7,15 +6,16 @@ Plum is a learning-focused language developed one feature at a time, without rel
 
 ## 🚀 Current Version
 
-**v0.10 — Bitwise Operators**
+**v0.10 — Bitwise Operators & Compound Assignment**
 
 Plum currently includes:
 
 - Lexer and recursive-descent parser
 - Abstract Syntax Tree (AST)
 - Tree-walking interpreter
-- Variables, types, and assignment
+- Variables, types, constants, and assignment
 - Arithmetic, comparison, logical, and bitwise operators
+- Compound assignment operators
 - Functions and return statements
 - Conditional statements
 - Loops and loop control flow
@@ -32,19 +32,26 @@ Plum currently includes:
 | v0.7 | Functions & Returns | [Read docs](docs/v0.7.md) |
 | v0.8 | Conditional Statements | [Read docs](docs/v0.8.md) |
 | v0.9 | For Loops & Loop Control Flow | [Read docs](docs/v0.9.md) |
-| v0.10 | Bitwise Operators | [Read docs](docs/v0.10.md) |
+| v0.10 | Bitwise Operators & Compound Assignment | [Read docs](docs/v0.10.md) |
 
 ## ✨ Features
 
-### v0.10 — Bitwise Operators
+### v0.10 — Bitwise Operators & Compound Assignment
 
 - 🔢 Bitwise AND: `&`
 - 🔢 Bitwise OR: `|`
 - ⚡ Bitwise XOR: `^`
 - 🔄 Bitwise NOT: `~`
-- ⚖️ Integer operand validation
+- ⚖️ Integer-valued operand validation for bitwise operations
 - 📐 Bitwise operator precedence
 - 🔀 Compatibility with logical operators
+- ➕ Addition assignment: `+=`
+- ➖ Subtraction assignment: `-=`
+- ✖️ Multiplication assignment: `*=`
+- ➗ Division assignment: `/=`
+- 🔢 Modulo assignment: `%=`
+- 🧩 Support for expressions on the right-hand side
+- 🛡️ Improved compound assignment error messages
 
 ### v0.9 — For Loops & Loop Control Flow
 
@@ -153,12 +160,13 @@ You can run other example programs the same way:
 
 ```bash
 python -m plum.main example/v0.10-bitwise.plum
+python -m plum.main example/v0.10-compound-assignment.plum
 python -m plum.main example/test_logic.plum
 ```
 
-### Example
+### Example: Bitwise Operators
 
-```text
+```plum
 drop(5 & 3)
 drop(5 | 3)
 drop(5 ^ 3)
@@ -172,6 +180,29 @@ Output:
 7
 6
 -6
+```
+
+### Example: Compound Assignment
+
+```plum
+plant int a = 10
+
+a += 5
+drop(a)
+
+a *= 2
+drop(a)
+
+a %= 6
+drop(a)
+```
+
+Output:
+
+```text
+15
+30
+0
 ```
 
 ## 🧪 Testing
@@ -188,6 +219,12 @@ Run the bitwise operator examples:
 
 ```bash
 python -m plum.main example/v0.10-bitwise.plum
+```
+
+Run the compound assignment examples:
+
+```bash
+python -m plum.main example/v0.10-compound-assignment.plum
 ```
 
 Run the extended loop example:
@@ -210,8 +247,7 @@ This architecture makes Plum a practical project for learning how programming la
 
 Potential future improvements:
 
-- Bitwise shift operators
-- Improved runtime error messages
+- Improved runtime error messages without Python tracebacks
 - Expanded automated testing
 - More language features and standard-library functionality
 
