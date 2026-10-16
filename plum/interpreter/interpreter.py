@@ -207,20 +207,30 @@ class Interpreter:
             old_value = scope[node.name]
             right_value = self._evaluate(node.value)
 
-            if node.operator == '+=':
-                new_value = old_value + right_value
-            elif node.operator == '-=':
-                new_value = old_value - right_value
-            elif node.operator == '*=':
-                new_value = old_value * right_value
-            elif node.operator == '/=':
-                new_value = old_value / right_value
-            elif node.operator == '%=':
-                new_value = old_value % right_value
-            else:
+            try:
+                if node.operator == '+=':
+                    new_value = old_value + right_value
+                elif node.operator == '-=':
+                    new_value = old_value - right_value
+                elif node.operator == '*=':
+                    new_value = old_value * right_value
+                elif node.operator == '/=':
+                    new_value = old_value / right_value
+                elif node.operator == '%=':
+                    new_value = old_value % right_value
+                else:
+                    raise RuntimeError(
+                        f"Unsupported compound assignment: '{node.operator}'"
+                    )
+            except TypeError as e:
                 raise RuntimeError(
-                    f"Unsupported compound assignment: '{node.operator}'"
-                )
+                    f"Type error: Operator '{node.operator}' is not supported "
+                    f"for {type(old_value).__name__} and {type(right_value).__name__} values"
+                ) from e
+            except ZeroDivisionError as e:
+                raise RuntimeError(
+                    f"Math error: Cannot use '{node.operator}' with zero"
+                ) from e
 
             if node.name in self.var_types:
                 new_value = self._coerce_value(
