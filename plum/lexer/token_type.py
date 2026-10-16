@@ -76,3 +76,10 @@ class TokenType(Enum):
 
     BITWISE_LEFT_SHIFT = auto()
     BITWISE_RIGHT_SHIFT = auto()
+
+    # v0.10 - Compound assignment operators
+    PLUS_EQUALS = auto()       # +=
+    MINUS_EQUALS = auto()      # -=
+    STAR_EQUALS = auto()       # *=
+    SLASH_EQUALS = auto()      # /=
+    PERCENT_EQUALS = auto()    # %=

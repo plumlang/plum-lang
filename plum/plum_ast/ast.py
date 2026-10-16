@@ -56,6 +56,14 @@ class Assignment(ASTNode):
      name: str
      value: ASTNode
 
+#v0.10 compound assignment: x += 5, x -= 2, etc.
+@dataclass
+class CompoundAssignment(ASTNode):
+    """Compound assignment: x += 5, x -= 2, etc."""
+    name: str
+    operator: str
+    value: ASTNode
+
 # v0.8 - if/else statement
 @dataclass
 class IfStatement(ASTNode):

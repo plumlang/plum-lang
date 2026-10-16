@@ -326,14 +326,38 @@ class Parser:
     # ---------------------------------------------------------------
     # ASSIGNMENT  (x = 5)
     # ---------------------------------------------------------------
-    def _assignment(self) -> Assignment:
-        name_token = self._consume(TokenType.IDENTIFIER, "Expected variable name for assignment")
+
+    def _assignment(self):
+        name_token = self._consume(
+            TokenType.IDENTIFIER,
+            "Expected variable name for assignment"
+        )
         name = name_token.value
 
-        self._consume(TokenType.EQUALS, "Expected '=' after variable name")
+        operator_tokens = {
+            TokenType.EQUALS: "=",
+            TokenType.PLUS_EQUALS: "+=",
+            TokenType.MINUS_EQUALS: "-=",
+            TokenType.STAR_EQUALS: "*=",
+            TokenType.SLASH_EQUALS: "/=",
+            TokenType.PERCENT_EQUALS: "%=",
+        }
+
+        operator_token = self._peek()
+
+        if operator_token.type not in operator_tokens:
+            raise SyntaxError(
+                f"Expected assignment operator at line {operator_token.line}"
+            )
+
+        self._advance()
+        operator = operator_tokens[operator_token.type]
         value = self._expression()
 
-        return Assignment(name, value)
+        if operator == "=":
+            return Assignment(name, value)
+
+        return CompoundAssignment(name, operator, value)
 
     # ---------------------------------------------------------------
     # RETURN
@@ -603,11 +627,22 @@ class Parser:
         if self._match(TokenType.ROOT):
             return self._variable_declaration(mutable=False)
 
+
         # Variable assignment
         if self._check(TokenType.IDENTIFIER):
+            assignment_operators = {
+                TokenType.EQUALS,
+                TokenType.PLUS_EQUALS,
+                TokenType.MINUS_EQUALS,
+                TokenType.STAR_EQUALS,
+                TokenType.SLASH_EQUALS,
+                TokenType.PERCENT_EQUALS,
+            }
+
             if (self.current + 1 < len(self.tokens) and
-                    self.tokens[self.current + 1].type == TokenType.EQUALS):
+                    self.tokens[self.current + 1].type in assignment_operators):
                 return self._assignment()
+
 
         # Print statement
         if self._match(TokenType.DROP):
