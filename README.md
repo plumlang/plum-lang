@@ -32,11 +32,10 @@ Plum currently includes:
 | v0.7 | Functions & Returns | [Read docs](docs/v0.7.md) |
 | v0.8 | Conditional Statements | [Read docs](docs/v0.8.md) |
 | v0.9 | For Loops & Loop Control Flow | [Read docs](docs/v0.9.md) |
-| v0.10 | Bitwise Operators | [Read docs](docs/v0.10.md) |
+| v0.10 | Bitwise, Shift & Compound Assignment Operators | [Read docs](docs/v0.10.md) |
 
 ## ✨ Features
-
-### v0.10 — Bitwise Operators
+### v0.10 — Bitwise, Shift & Compound Assignment Operators
 
 - 🔢 Bitwise AND: `&`
 - 🔢 Bitwise OR: `|`
@@ -45,6 +44,11 @@ Plum currently includes:
 - ⚖️ Integer operand validation
 - 📐 Bitwise operator precedence
 - 🔀 Compatibility with logical operators
+- ↔️ Bitwise shift operators: `<<`, `>>`
+- ➕ Arithmetic compound assignments: `+=`, `-=`, `*=`, `/=`, `%=`
+- 🔢 Floor division and power assignments: `//=`, `**=`
+- ⚙️ Bitwise compound assignments: `&=`, `|=`, `^=`
+- ↔️ Shift compound assignments: `<<=`, `>>=`
 
 ### v0.9 — For Loops & Loop Control Flow
 

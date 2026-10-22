@@ -218,6 +218,37 @@ class Interpreter:
                     new_value = old_value / right_value
                 elif node.operator == '%=':
                     new_value = old_value % right_value
+                elif node.operator == '//=':
+                    new_value = old_value // right_value
+                elif node.operator == '**=':
+                    new_value = old_value ** right_value
+                elif node.operator in ('&=', '|=', '^=', '<<=', '>>='):
+                    if (
+                        not isinstance(old_value, (int, float))
+                        or isinstance(old_value, bool)
+                        or not isinstance(right_value, (int, float))
+                        or isinstance(right_value, bool)
+                        or not float(old_value).is_integer()
+                        or not float(right_value).is_integer()
+                    ):
+                        raise RuntimeError(
+                            f"Type error: Operator '{node.operator}' requires "
+                            "integer-valued operands"
+                        )
+
+                    left_int = int(old_value)
+                    right_int = int(right_value)
+
+                    if node.operator == '&=':
+                        new_value = left_int & right_int
+                    elif node.operator == '|=':
+                        new_value = left_int | right_int
+                    elif node.operator == '^=':
+                        new_value = left_int ^ right_int
+                    elif node.operator == '<<=':
+                        new_value = left_int << right_int
+                    else:
+                        new_value = left_int >> right_int
                 else:
                     raise RuntimeError(
                         f"Unsupported compound assignment: '{node.operator}'"
@@ -225,11 +256,16 @@ class Interpreter:
             except TypeError as e:
                 raise RuntimeError(
                     f"Type error: Operator '{node.operator}' is not supported "
-                    f"for {type(old_value).__name__} and {type(right_value).__name__} values"
+                    f"for {type(old_value).__name__} and "
+                    f"{type(right_value).__name__} values"
                 ) from e
             except ZeroDivisionError as e:
                 raise RuntimeError(
                     f"Math error: Cannot use '{node.operator}' with zero"
+                ) from e
+            except ValueError as e:
+                raise RuntimeError(
+                    f"Math error: Invalid operands for '{node.operator}'"
                 ) from e
 
             if node.name in self.var_types:
