@@ -341,8 +341,14 @@ class Parser:
             TokenType.STAR_EQUALS: "*=",
             TokenType.SLASH_EQUALS: "/=",
             TokenType.PERCENT_EQUALS: "%=",
+            TokenType.FLOOR_DIVIDE_EQUALS: "//=",
+            TokenType.POWER_EQUALS: "**=",
+            TokenType.AMPERSAND_EQUALS: "&=",
+            TokenType.PIPE_EQUALS: "|=",
+            TokenType.CARET_EQUALS: "^=",
+            TokenType.LEFT_SHIFT_EQUALS: "<<=",
+            TokenType.RIGHT_SHIFT_EQUALS: ">>=",
         }
-
         operator_token = self._peek()
 
         if operator_token.type not in operator_tokens:
@@ -637,6 +643,13 @@ class Parser:
                 TokenType.STAR_EQUALS,
                 TokenType.SLASH_EQUALS,
                 TokenType.PERCENT_EQUALS,
+                TokenType.FLOOR_DIVIDE_EQUALS,
+                TokenType.POWER_EQUALS,
+                TokenType.AMPERSAND_EQUALS,
+                TokenType.PIPE_EQUALS,
+                TokenType.CARET_EQUALS,
+                TokenType.LEFT_SHIFT_EQUALS,
+                TokenType.RIGHT_SHIFT_EQUALS,
             }
 
             if (self.current + 1 < len(self.tokens) and

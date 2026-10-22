@@ -83,3 +83,11 @@ class TokenType(Enum):
     STAR_EQUALS = auto()       # *=
     SLASH_EQUALS = auto()      # /=
     PERCENT_EQUALS = auto()    # %=
+
+    FLOOR_DIVIDE_EQUALS = auto()  # //=
+    POWER_EQUALS = auto()         # **=
+    AMPERSAND_EQUALS = auto()     # &=
+    PIPE_EQUALS = auto()          # |=
+    CARET_EQUALS = auto()         # ^=
+    LEFT_SHIFT_EQUALS = auto()    # <<=
+    RIGHT_SHIFT_EQUALS = auto()   # >>=
