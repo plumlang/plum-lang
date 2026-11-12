@@ -66,4 +66,10 @@ class TokenType(Enum):
 
     # v0.10 Increment / Decrement
     INCREMENT = auto()      # ++
-    DECREMENT = auto() 
+    DECREMENT = auto()  # --
+
+    # v0.10.1
+    PLUS_EQUALS = auto()     # +=
+    MINUS_EQUALS = auto()    # -=
+    STAR_EQUALS = auto()    # *=
+    SLASH_EQUALS = auto()   # /=

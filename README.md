@@ -120,4 +120,4 @@ source .plum/bin/activate
 
 # Run a Plum program
 
-python3 -m plum.main example/main.plum
+python3 -m plum.main  example/main.plum

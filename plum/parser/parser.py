@@ -244,10 +244,31 @@ class Parser:
         name_token = self._consume(TokenType.IDENTIFIER, "Expected variable name for assignment")
         name = name_token.value
 
-        self._consume(TokenType.EQUALS, "Expected '=' after variable name")
-        value = self._expression()
+        if self._match(TokenType.EQUALS):
+            value = self._expression()
+            return Assignment(name, value)
 
-        return Assignment(name, value)
+        if self._match(TokenType.PLUS_EQUALS):
+            op = '+'
+        elif self._match(TokenType.MINUS_EQUALS):
+            op = '-'
+        elif self._match(TokenType.STAR_EQUALS):
+            op = '*'
+        elif self._match(TokenType.SLASH_EQUALS):
+            op = '/'
+        else:
+            raise SyntaxError(
+            f"Expected assignment operator after '{name}' "
+            f"at line {self._peek().line}"
+            )
+
+        rhs = self._expression()
+        desugared_value = BinaryOperation(
+        left=VariableReference(name),
+        operator=op,
+        right=rhs,
+        )
+        return Assignment(name, desugared_value)
 
     # ---------------------------------------------------------------
     # RETURN
@@ -520,8 +541,15 @@ class Parser:
         # Variable assignment
         if self._check(TokenType.IDENTIFIER):
             if (self.current + 1 < len(self.tokens) and
-                    self.tokens[self.current + 1].type == TokenType.EQUALS):
+                    self.tokens[self.current + 1].type in (
+                        TokenType.EQUALS,
+                        TokenType.PLUS_EQUALS,
+                        TokenType.MINUS_EQUALS,
+                        TokenType.STAR_EQUALS,
+                        TokenType.SLASH_EQUALS,
+                    )):
                 return self._assignment()
+            
 
         # Print statement
         if self._match(TokenType.DROP):

@@ -1,0 +1,13 @@
+# Compound Assignment Operators
+drop("=== *= ===")
+plant int a = 10
+a *= 5
+
+drop(a)          # 15
+
+drop("=== += ===")
+plant int a = 10
+a += 5
+
+drop("fucker")
+drop(a)          # 15
