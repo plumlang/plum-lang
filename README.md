@@ -221,4 +221,4 @@ Potential future improvements:
 
 ## 🎯 Project Goal
 
-Plum is an ongoing exploration of programming language design, interpreter implementation, and the fundamentals behind real-world programming languages.
+python3 -m plum.main  example/main.plum

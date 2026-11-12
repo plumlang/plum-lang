@@ -66,28 +66,10 @@ class TokenType(Enum):
 
     # v0.10 Increment / Decrement
     INCREMENT = auto()      # ++
-    DECREMENT = auto() 
+    DECREMENT = auto()  # --
 
-    #v0.10 Bitwise Operators 
-    BITWISE_AND = auto()
-    BITWISE_OR = auto()
-    BITWISE_XOR = auto()
-    BITWISE_NOT = auto()
-
-    BITWISE_LEFT_SHIFT = auto()
-    BITWISE_RIGHT_SHIFT = auto()
-
-    # v0.10 - Compound assignment operators
-    PLUS_EQUALS = auto()       # +=
-    MINUS_EQUALS = auto()      # -=
-    STAR_EQUALS = auto()       # *=
-    SLASH_EQUALS = auto()      # /=
-    PERCENT_EQUALS = auto()    # %=
-
-    FLOOR_DIVIDE_EQUALS = auto()  # //=
-    POWER_EQUALS = auto()         # **=
-    AMPERSAND_EQUALS = auto()     # &=
-    PIPE_EQUALS = auto()          # |=
-    CARET_EQUALS = auto()         # ^=
-    LEFT_SHIFT_EQUALS = auto()    # <<=
-    RIGHT_SHIFT_EQUALS = auto()   # >>=
+    # v0.10.1
+    PLUS_EQUALS = auto()     # +=
+    MINUS_EQUALS = auto()    # -=
+    STAR_EQUALS = auto()    # *=
+    SLASH_EQUALS = auto()   # /=

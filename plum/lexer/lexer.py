@@ -35,17 +35,20 @@ class Lexer:
             # REMOVED: The old/bad '=' handler that raises an error
             # This was causing the SyntaxError: Unexpected character '='
             
-            # Addition (+) and increment (++)
             if current == '+':
-                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '+':
-                    self.tokens.append(Token(TokenType.INCREMENT, '++', self.line))
-                    self.position += 2
-                elif self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
-                    self.tokens.append(Token(TokenType.PLUS_EQUALS, '+=', self.line))
-                    self.position += 2
-                else:
-                    self.tokens.append(Token(TokenType.PLUS, '+', self.line))
-                    self.position += 1
+                if self.position + 1 < len(self.source):
+                    next_char = self.source[self.position + 1]
+                    if next_char == '+':
+                      self.tokens.append(Token(TokenType.INCREMENT, '++', self.line))
+                      self.position += 2
+                      continue
+                    if next_char == '=':
+                       self.tokens.append(Token(TokenType.PLUS_EQUALS, '+=', self.line))
+                       self.position += 2
+                       continue
+                
+                self.tokens.append(Token(TokenType.PLUS, '+', self.line))
+                self.position += 1
                 continue
 
 
@@ -60,56 +63,50 @@ class Lexer:
 
             # Subtraction operator (-)
             if current == '-':
-                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '-':
-                    self.tokens.append(Token(TokenType.DECREMENT, '--', self.line))
-                    self.position += 2
-                elif self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
-                    self.tokens.append(Token(TokenType.MINUS_EQUALS, '-=', self.line))
-                    self.position += 2
-                else:
-                    self.tokens.append(Token(TokenType.MINUS, '-', self.line))
-                    self.position += 1
+                if self.position + 1 < len(self.source): 
+                    next_char = self.source[self.position + 1]
+                    if next_char == '-':
+                      self.tokens.append(Token(TokenType.DECREMENT, '--', self.line))
+                      self.position += 2
+                      continue
+                    if next_char == '=':
+                      self.tokens.append(Token(TokenType.MINUS_EQUALS, '-=', self.line))
+                      self.position += 2
+                      continue
+                self.tokens.append(Token(TokenType.MINUS, '-', self.line))
+                self.position += 1
                 continue
 
             # Multiplication (*) and Power (**)
             if current == '*':
-                if (
-                    self.position + 2 < len(self.source)
-                    and self.source[self.position + 1:self.position + 3] == '*='
-                ):
-                    self.tokens.append(Token(TokenType.POWER_EQUALS, '**=', self.line))
-                    self.position += 3
-                elif (
-                    self.position + 1 < len(self.source)
-                    and self.source[self.position + 1] == '*'
-                ):
-                    self.tokens.append(Token(TokenType.POWER, '**', self.line))
-                    self.position += 2
-                elif (
-                    self.position + 1 < len(self.source)
-                    and self.source[self.position + 1] == '='
-                ):
-                    self.tokens.append(Token(TokenType.STAR_EQUALS, '*=', self.line))
-                    self.position += 2
-                else:
-                    self.tokens.append(Token(TokenType.STAR, '*', self.line))
-                    self.position += 1
+                if self.position + 1 < len(self.source):
+                    next_char = self.source[self.position + 1]
+                    if next_char == '*':
+                      self.tokens.append(Token(TokenType.POWER, '**', self.line))
+                      self.position += 2
+                      continue
+                    if next_char == '=':
+                      self.tokens.append(Token(TokenType.STAR_EQUALS, '*=', self.line))
+                      self.position += 2
+                      continue
+                self.tokens.append(Token(TokenType.STAR, '*', self.line))
+                self.position += 1
                 continue
 
             # Division (/) and Floor Division (//)
             if current == '/':
-                if self.position + 2 < len(self.source) and self.source[self.position + 1:self.position + 3] == '/=':
-                    self.tokens.append(Token(TokenType.FLOOR_DIVIDE_EQUALS, '//=', self.line))
-                    self.position += 3
-                elif self.position + 1 < len(self.source) and self.source[self.position + 1] == '/':
-                    self.tokens.append(Token(TokenType.DOUBLE_SLASH, '//', self.line))
-                    self.position += 2
-                elif self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
-                    self.tokens.append(Token(TokenType.SLASH_EQUALS, '/=', self.line))
-                    self.position += 2
-                else:
-                    self.tokens.append(Token(TokenType.SLASH, '/', self.line))
-                    self.position += 1
+                if self.position + 1 < len(self.source):
+                    next_char = self.source[self.position + 1]
+                    if next_char == '/':
+                      self.tokens.append(Token(TokenType.DOUBLE_SLASH, '//', self.line))
+                      self.position += 2
+                      continue
+                    if next_char == '=':
+                      self.tokens.append(Token(TokenType.SLASH_EQUALS, '/=', self.line))
+                      self.position += 2
+                      continue
+                self.tokens.append(Token(TokenType.SLASH, '/', self.line))
+                self.position += 1
                 continue
 
             # Modulo operator (%)
