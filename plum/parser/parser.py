@@ -115,8 +115,9 @@ class Parser:
     # ---------------------------------------------------------------
     # UNARY  (-x, !x, ++x, --x)
     # ---------------------------------------------------------------
+
     def _unary(self) -> ASTNode:
-        """Parse prefix operators: -x, !x, ++x, --x"""
+        """Parse prefix operators: -x, !x, ~x, ++x, --x"""
 
         # Unary minus
         if self._match(TokenType.MINUS):
@@ -126,6 +127,12 @@ class Parser:
 
         # Logical NOT
         if self._match(TokenType.NOT):
+            operator = self._previous().value
+            operand = self._unary()
+            return UnaryOperation(operator, operand)
+
+        # Bitwise NOT
+        if self._match(TokenType.BITWISE_NOT):
             operator = self._previous().value
             operand = self._unary()
             return UnaryOperation(operator, operand)
@@ -140,6 +147,7 @@ class Parser:
             return IncrementDecrement(name_token.value, operator, is_prefix=True)
 
         return self._postfix()
+
 
     # ---------------------------------------------------------------
     # POWER  (**)
@@ -174,22 +182,100 @@ class Parser:
             left = BinaryOperation(left, operator, right)
         return left
 
-    # ---------------------------------------------------------------
-    # COMPARISON  (== != > < >= <=)
-    # ---------------------------------------------------------------
-    def _comparison(self) -> ASTNode:
+    
+    # Bitwise shifts (<<, >>)
+    def _shift(self) -> ASTNode:
         left = self._addition()
+
         while self._match(
-            TokenType.EQUAL_EQUAL, TokenType.NOT_EQUAL,
-            TokenType.GREATER, TokenType.GREATER_EQUAL,
-            TokenType.LESS, TokenType.LESS_EQUAL
+            TokenType.BITWISE_LEFT_SHIFT,
+            TokenType.BITWISE_RIGHT_SHIFT
         ):
             operator = self._previous().value
             right = self._addition()
             left = BinaryOperation(left, operator, right)
+
+        return left
+
+    # Bitwise AND (&)
+    def _bitwise_and(self) -> ASTNode:
+        left = self._shift()
+        while self._match(TokenType.BITWISE_AND):
+            operator = self._previous().value
+            right = self._shift()
+            left = BinaryOperation(left, operator, right)
+        return left
+
+    # Bitwise XOR (^) has lower precedence than AND
+    def _bitwise_xor(self) -> ASTNode:
+        left = self._bitwise_and()
+        while self._match(TokenType.BITWISE_XOR):
+            operator = self._previous().value
+            right = self._bitwise_and()
+            left = BinaryOperation(left, operator, right)
+        return left
+
+    # Bitwise OR (|) has lower precedence than XOR
+    def _bitwise_or(self) -> ASTNode:
+        left = self._bitwise_xor()
+        while self._match(TokenType.BITWISE_OR):
+            operator = self._previous().value
+            right = self._bitwise_xor()
+            left = BinaryOperation(left, operator, right)
+        return left
+
+
+    # ---------------------------------------------------------------
+    # COMPARISON  (== != > < >= <=)
+    # ---------------------------------------------------------------
+    def _comparison(self) -> ASTNode:
+        left = self._bitwise_or()
+
+        while self._match(
+            TokenType.GREATER,
+            TokenType.GREATER_EQUAL,
+            TokenType.LESS,
+            TokenType.LESS_EQUAL,
+            TokenType.EQUAL_EQUAL,
+            TokenType.NOT_EQUAL
+        ):
+            operator = self._previous().value
+            right = self._bitwise_or()
+            left = BinaryOperation(left, operator, right)
+
         return left
 
     def _expression(self) -> ASTNode:
+        return self._or()
+
+    # Logical OR (||) — lowest logical precedence
+    def _or(self) -> ASTNode:
+        left = self._and()
+
+        while self._match(TokenType.OR):
+            operator = self._previous().value
+            right = self._and()
+            left = BinaryOperation(left, operator, right)
+
+        return left
+
+    # Logical AND (&&)
+    def _and(self) -> ASTNode:
+        left = self._not()
+
+        while self._match(TokenType.AND):
+            operator = self._previous().value
+            right = self._not()
+            left = BinaryOperation(left, operator, right)
+
+        return left
+
+    # Logical NOT (!) — highest logical precedence
+    def _not(self) -> ASTNode:
+        if self._match(TokenType.NOT):
+            operator = self._previous().value
+            return UnaryOperation(operator, self._not())
+
         return self._comparison()
 
     # ---------------------------------------------------------------
@@ -240,8 +326,12 @@ class Parser:
     # ---------------------------------------------------------------
     # ASSIGNMENT  (x = 5)
     # ---------------------------------------------------------------
-    def _assignment(self) -> Assignment:
-        name_token = self._consume(TokenType.IDENTIFIER, "Expected variable name for assignment")
+
+    def _assignment(self):
+        name_token = self._consume(
+            TokenType.IDENTIFIER,
+            "Expected variable name for assignment"
+        )
         name = name_token.value
 
         if self._match(TokenType.EQUALS):
@@ -538,8 +628,25 @@ class Parser:
         if self._match(TokenType.ROOT):
             return self._variable_declaration(mutable=False)
 
+
         # Variable assignment
         if self._check(TokenType.IDENTIFIER):
+            assignment_operators = {
+                TokenType.EQUALS,
+                TokenType.PLUS_EQUALS,
+                TokenType.MINUS_EQUALS,
+                TokenType.STAR_EQUALS,
+                TokenType.SLASH_EQUALS,
+                TokenType.PERCENT_EQUALS,
+                TokenType.FLOOR_DIVIDE_EQUALS,
+                TokenType.POWER_EQUALS,
+                TokenType.AMPERSAND_EQUALS,
+                TokenType.PIPE_EQUALS,
+                TokenType.CARET_EQUALS,
+                TokenType.LEFT_SHIFT_EQUALS,
+                TokenType.RIGHT_SHIFT_EQUALS,
+            }
+
             if (self.current + 1 < len(self.tokens) and
                     self.tokens[self.current + 1].type in (
                         TokenType.EQUALS,
@@ -550,6 +657,7 @@ class Parser:
                     )):
                 return self._assignment()
             
+
 
         # Print statement
         if self._match(TokenType.DROP):

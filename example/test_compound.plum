@@ -1,0 +1,3 @@
+plant str message = "Hello"
+message -= "lo"
+drop(message)

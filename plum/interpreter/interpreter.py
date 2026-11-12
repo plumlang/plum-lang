@@ -1,4 +1,5 @@
 from plum.plum_ast import *
+from plum.plum_ast.ast import UnaryOperation
 
 
 class BreakException(Exception):
@@ -190,6 +191,92 @@ class Interpreter:
                 raise NameError(f"Undefined variable: '{node.name}'")
             return None
 
+        
+        # Compound assignment v0.10: x += 5, x -= 2, etc.
+        elif isinstance(node, CompoundAssignment):
+            if node.name in self.current_env:
+                scope = self.current_env
+            elif node.name in self.global_env:
+                scope = self.global_env
+            else:
+                raise NameError(f"Undefined variable: '{node.name}'")
+
+            if node.name in self.constants:
+                raise RuntimeError(f"Cannot reassign constant '{node.name}'")
+
+            old_value = scope[node.name]
+            right_value = self._evaluate(node.value)
+
+            try:
+                if node.operator == '+=':
+                    new_value = old_value + right_value
+                elif node.operator == '-=':
+                    new_value = old_value - right_value
+                elif node.operator == '*=':
+                    new_value = old_value * right_value
+                elif node.operator == '/=':
+                    new_value = old_value / right_value
+                elif node.operator == '%=':
+                    new_value = old_value % right_value
+                elif node.operator == '//=':
+                    new_value = old_value // right_value
+                elif node.operator == '**=':
+                    new_value = old_value ** right_value
+                elif node.operator in ('&=', '|=', '^=', '<<=', '>>='):
+                    if (
+                        not isinstance(old_value, (int, float))
+                        or isinstance(old_value, bool)
+                        or not isinstance(right_value, (int, float))
+                        or isinstance(right_value, bool)
+                        or not float(old_value).is_integer()
+                        or not float(right_value).is_integer()
+                    ):
+                        raise RuntimeError(
+                            f"Type error: Operator '{node.operator}' requires "
+                            "integer-valued operands"
+                        )
+
+                    left_int = int(old_value)
+                    right_int = int(right_value)
+
+                    if node.operator == '&=':
+                        new_value = left_int & right_int
+                    elif node.operator == '|=':
+                        new_value = left_int | right_int
+                    elif node.operator == '^=':
+                        new_value = left_int ^ right_int
+                    elif node.operator == '<<=':
+                        new_value = left_int << right_int
+                    else:
+                        new_value = left_int >> right_int
+                else:
+                    raise RuntimeError(
+                        f"Unsupported compound assignment: '{node.operator}'"
+                    )
+            except TypeError as e:
+                raise RuntimeError(
+                    f"Type error: Operator '{node.operator}' is not supported "
+                    f"for {type(old_value).__name__} and "
+                    f"{type(right_value).__name__} values"
+                ) from e
+            except ZeroDivisionError as e:
+                raise RuntimeError(
+                    f"Math error: Cannot use '{node.operator}' with zero"
+                ) from e
+            except ValueError as e:
+                raise RuntimeError(
+                    f"Math error: Invalid operands for '{node.operator}'"
+                ) from e
+
+            if node.name in self.var_types:
+                new_value = self._coerce_value(
+                    self.var_types[node.name], new_value, node.name
+                )
+
+            scope[node.name] = new_value
+            return None
+
+
         # Function declaration
         elif isinstance(node, FunctionDeclaration):
             self.functions[node.name] = node
@@ -372,16 +459,32 @@ class Interpreter:
             # Prefix returns new, postfix returns old
             return new_value if node.is_prefix else old_value
 
-        # NEW: Unary operation (-x, !x)
+        # Unary operations: arithmetic, logical, and bitwise
         elif isinstance(node, UnaryOperation):
             operand = self._evaluate(node.operand)
+
             if node.operator == '-':
                 return -operand
             elif node.operator == '!':
-                return not operand
-            else:
-                raise RuntimeError(f"Unknown unary operator: {node.operator}")
+                return not bool(operand)
 
+            elif node.operator == '~':
+                if (
+                    isinstance(operand, bool)
+                    or not isinstance(operand, (int, float))
+                    or int(operand) != operand
+                ):
+                    raise RuntimeError(
+                        "Operator '~' requires an integer operand"
+                    )
+                return ~int(operand)
+
+            else:
+                raise RuntimeError(
+                    f"Unknown unary operator: {node.operator}"
+                )
+
+        
         # Binary operation
         elif isinstance(node, BinaryOperation):
             left_val = self._evaluate(node.left)
@@ -407,6 +510,60 @@ class Interpreter:
                 return left_val // right_val
             elif node.operator == '**':
                 return left_val ** right_val
+            
+
+            # Bitwise operators require whole-number operands
+            elif node.operator in ('&', '|', '^'):
+                if (
+                    isinstance(left_val, bool)
+                    or isinstance(right_val, bool)
+                    or not isinstance(left_val, (int, float))
+                    or not isinstance(right_val, (int, float))
+                    or int(left_val) != left_val
+                    or int(right_val) != right_val
+                ):
+                    raise RuntimeError(
+                        f"Operator '{node.operator}' requires integer operands"
+                    )
+
+                left_val = int(left_val)
+                right_val = int(right_val)
+
+                if node.operator == '&':
+                    return left_val & right_val
+                elif node.operator == '|':
+                    return left_val | right_val
+                else:
+                    return left_val ^ right_val
+
+
+                
+            # Bitwise shifts require integer operands
+            elif node.operator in ('<<', '>>'):
+                if (
+                    isinstance(left_val, bool)
+                    or isinstance(right_val, bool)
+                    or not isinstance(left_val, (int, float))
+                    or not isinstance(right_val, (int, float))
+                    or int(left_val) != left_val
+                    or int(right_val) != right_val
+                ):
+                    raise RuntimeError(
+                        f"Operator '{node.operator}' requires integer operands"
+                    )
+
+                shift = int(right_val)
+
+                if shift < 0:
+                    raise RuntimeError("Shift count cannot be negative")
+
+                left_val = int(left_val)
+
+                if node.operator == '<<':
+                    return left_val << shift
+                else:
+                    return left_val >> shift
+
             elif node.operator == '==':
                 return left_val == right_val
             elif node.operator == '!=':
