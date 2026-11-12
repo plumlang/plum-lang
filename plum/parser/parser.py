@@ -334,31 +334,30 @@ class Parser:
         )
         name = name_token.value
 
-        if self._match(TokenType.EQUALS):
-            value = self._expression()
-            return Assignment(name, value)
+        operator_tokens = {
+            TokenType.EQUALS: "=",
+            TokenType.PLUS_EQUALS: "+=",
+            TokenType.MINUS_EQUALS: "-=",
+            TokenType.STAR_EQUALS: "*=",
+            TokenType.SLASH_EQUALS: "/=",
+            TokenType.PERCENT_EQUALS: "%=",
+        }
 
-        if self._match(TokenType.PLUS_EQUALS):
-            op = '+'
-        elif self._match(TokenType.MINUS_EQUALS):
-            op = '-'
-        elif self._match(TokenType.STAR_EQUALS):
-            op = '*'
-        elif self._match(TokenType.SLASH_EQUALS):
-            op = '/'
-        else:
+        operator_token = self._peek()
+
+        if operator_token.type not in operator_tokens:
             raise SyntaxError(
-            f"Expected assignment operator after '{name}' "
-            f"at line {self._peek().line}"
+                f"Expected assignment operator at line {operator_token.line}"
             )
 
-        rhs = self._expression()
-        desugared_value = BinaryOperation(
-        left=VariableReference(name),
-        operator=op,
-        right=rhs,
-        )
-        return Assignment(name, desugared_value)
+        self._advance()
+        operator = operator_tokens[operator_token.type]
+        value = self._expression()
+
+        if operator == "=":
+            return Assignment(name, value)
+
+        return CompoundAssignment(name, operator, value)
 
     # ---------------------------------------------------------------
     # RETURN
@@ -638,25 +637,11 @@ class Parser:
                 TokenType.STAR_EQUALS,
                 TokenType.SLASH_EQUALS,
                 TokenType.PERCENT_EQUALS,
-                TokenType.FLOOR_DIVIDE_EQUALS,
-                TokenType.POWER_EQUALS,
-                TokenType.AMPERSAND_EQUALS,
-                TokenType.PIPE_EQUALS,
-                TokenType.CARET_EQUALS,
-                TokenType.LEFT_SHIFT_EQUALS,
-                TokenType.RIGHT_SHIFT_EQUALS,
             }
 
             if (self.current + 1 < len(self.tokens) and
-                    self.tokens[self.current + 1].type in (
-                        TokenType.EQUALS,
-                        TokenType.PLUS_EQUALS,
-                        TokenType.MINUS_EQUALS,
-                        TokenType.STAR_EQUALS,
-                        TokenType.SLASH_EQUALS,
-                    )):
+                    self.tokens[self.current + 1].type in assignment_operators):
                 return self._assignment()
-            
 
 
         # Print statement

@@ -35,20 +35,17 @@ class Lexer:
             # REMOVED: The old/bad '=' handler that raises an error
             # This was causing the SyntaxError: Unexpected character '='
             
+            # Addition (+) and increment (++)
             if current == '+':
-                if self.position + 1 < len(self.source):
-                    next_char = self.source[self.position + 1]
-                    if next_char == '+':
-                      self.tokens.append(Token(TokenType.INCREMENT, '++', self.line))
-                      self.position += 2
-                      continue
-                    if next_char == '=':
-                       self.tokens.append(Token(TokenType.PLUS_EQUALS, '+=', self.line))
-                       self.position += 2
-                       continue
-                
-                self.tokens.append(Token(TokenType.PLUS, '+', self.line))
-                self.position += 1
+                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '+':
+                    self.tokens.append(Token(TokenType.INCREMENT, '++', self.line))
+                    self.position += 2
+                elif self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
+                    self.tokens.append(Token(TokenType.PLUS_EQUALS, '+=', self.line))
+                    self.position += 2
+                else:
+                    self.tokens.append(Token(TokenType.PLUS, '+', self.line))
+                    self.position += 1
                 continue
 
 
@@ -63,50 +60,42 @@ class Lexer:
 
             # Subtraction operator (-)
             if current == '-':
-                if self.position + 1 < len(self.source): 
-                    next_char = self.source[self.position + 1]
-                    if next_char == '-':
-                      self.tokens.append(Token(TokenType.DECREMENT, '--', self.line))
-                      self.position += 2
-                      continue
-                    if next_char == '=':
-                      self.tokens.append(Token(TokenType.MINUS_EQUALS, '-=', self.line))
-                      self.position += 2
-                      continue
-                self.tokens.append(Token(TokenType.MINUS, '-', self.line))
-                self.position += 1
+                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '-':
+                    self.tokens.append(Token(TokenType.DECREMENT, '--', self.line))
+                    self.position += 2
+                elif self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
+                    self.tokens.append(Token(TokenType.MINUS_EQUALS, '-=', self.line))
+                    self.position += 2
+                else:
+                    self.tokens.append(Token(TokenType.MINUS, '-', self.line))
+                    self.position += 1
                 continue
+
 
             # Multiplication (*) and Power (**)
             if current == '*':
-                if self.position + 1 < len(self.source):
-                    next_char = self.source[self.position + 1]
-                    if next_char == '*':
-                      self.tokens.append(Token(TokenType.POWER, '**', self.line))
-                      self.position += 2
-                      continue
-                    if next_char == '=':
-                      self.tokens.append(Token(TokenType.STAR_EQUALS, '*=', self.line))
-                      self.position += 2
-                      continue
-                self.tokens.append(Token(TokenType.STAR, '*', self.line))
-                self.position += 1
+                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '*':
+                    self.tokens.append(Token(TokenType.POWER, '**', self.line))
+                    self.position += 2
+                elif self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
+                    self.tokens.append(Token(TokenType.STAR_EQUALS, '*=', self.line))
+                    self.position += 2
+                else:
+                    self.tokens.append(Token(TokenType.STAR, '*', self.line))
+                    self.position += 1
                 continue
 
             # Division (/) and Floor Division (//)
             if current == '/':
-                if self.position + 1 < len(self.source):
-                    next_char = self.source[self.position + 1]
-                    if next_char == '/':
-                      self.tokens.append(Token(TokenType.DOUBLE_SLASH, '//', self.line))
-                      self.position += 2
-                      continue
-                    if next_char == '=':
-                      self.tokens.append(Token(TokenType.SLASH_EQUALS, '/=', self.line))
-                      self.position += 2
-                      continue
-                self.tokens.append(Token(TokenType.SLASH, '/', self.line))
-                self.position += 1
+                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '/':
+                    self.tokens.append(Token(TokenType.DOUBLE_SLASH, '//', self.line))
+                    self.position += 2
+                elif self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
+                    self.tokens.append(Token(TokenType.SLASH_EQUALS, '/=', self.line))
+                    self.position += 2
+                else:
+                    self.tokens.append(Token(TokenType.SLASH, '/', self.line))
+                    self.position += 1
                 continue
 
             # Modulo operator (%)
@@ -125,35 +114,38 @@ class Lexer:
                 if self.position + 1 < len(self.source) and self.source[self.position + 1] == '&':
                     self.tokens.append(Token(TokenType.AND, '&&', self.line))
                     self.position += 2
-                elif self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
-                    self.tokens.append(Token(TokenType.AMPERSAND_EQUALS, '&=', self.line))
-                    self.position += 2
                 else:
                     self.tokens.append(Token(TokenType.BITWISE_AND, '&', self.line))
                     self.position += 1
                 continue
 
-            # Bitwise OR (|) and logical OR (||)
+            # Bitwise OR (|) and logical OR (||) v0.10
             if current == '|':
                 if self.position + 1 < len(self.source) and self.source[self.position + 1] == '|':
                     self.tokens.append(Token(TokenType.OR, '||', self.line))
-                    self.position += 2
-                elif self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
-                    self.tokens.append(Token(TokenType.PIPE_EQUALS, '|=', self.line))
                     self.position += 2
                 else:
                     self.tokens.append(Token(TokenType.BITWISE_OR, '|', self.line))
                     self.position += 1
                 continue
-            
-            # Bitwise XOR (^)
-            if current == '^':
-                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '=':
-                    self.tokens.append(Token(TokenType.CARET_EQUALS, '^=', self.line))
+
+
+            # Logical OR (||)
+            if current == '|':
+                if self.position + 1 < len(self.source) and self.source[self.position + 1] == '|':
+                    self.tokens.append(Token(TokenType.OR, '||', self.line))
                     self.position += 2
-                else:
-                    self.tokens.append(Token(TokenType.BITWISE_XOR, '^', self.line))
-                    self.position += 1
+                    continue
+
+                raise SyntaxError(
+                    f"Unexpected character '|' on line {self.line}"
+                )
+
+            
+            # Bitwise XOR (^) v0.10
+            if current == '^':
+                self.tokens.append(Token(TokenType.BITWISE_XOR, '^', self.line))
+                self.position += 1
                 continue
 
             # Bitwise NOT (~) v0.10
@@ -180,12 +172,8 @@ class Lexer:
                     next_char = self.source[self.position + 1]
 
                     if next_char == '>':
-                        if self.position + 2 < len(self.source) and self.source[self.position + 2] == '=':
-                            self.tokens.append(Token(TokenType.RIGHT_SHIFT_EQUALS, '>>=', self.line))
-                            self.position += 3
-                        else:
-                            self.tokens.append(Token(TokenType.BITWISE_RIGHT_SHIFT, '>>', self.line))
-                            self.position += 2
+                        self.tokens.append(Token(TokenType.BITWISE_RIGHT_SHIFT, '>>', self.line))
+                        self.position += 2
                     elif next_char == '=':
                         self.tokens.append(Token(TokenType.GREATER_EQUAL, '>=', self.line))
                         self.position += 2
@@ -203,12 +191,8 @@ class Lexer:
                     next_char = self.source[self.position + 1]
 
                     if next_char == '<':
-                        if self.position + 2 < len(self.source) and self.source[self.position + 2] == '=':
-                            self.tokens.append(Token(TokenType.LEFT_SHIFT_EQUALS, '<<=', self.line))
-                            self.position += 3
-                        else:
-                            self.tokens.append(Token(TokenType.BITWISE_LEFT_SHIFT, '<<', self.line))
-                            self.position += 2
+                        self.tokens.append(Token(TokenType.BITWISE_LEFT_SHIFT, '<<', self.line))
+                        self.position += 2
                     elif next_char == '=':
                         self.tokens.append(Token(TokenType.LESS_EQUAL, '<=', self.line))
                         self.position += 2
@@ -219,6 +203,7 @@ class Lexer:
                     self.tokens.append(Token(TokenType.LESS, '<', self.line))
                     self.position += 1
                 continue
+
 
             # left paren 
             if current == '(':
