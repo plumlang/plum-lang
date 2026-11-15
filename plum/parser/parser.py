@@ -38,159 +38,260 @@ class Parser:
     def _consume(self, token_type: TokenType, message: str) -> Token:
         if self._check(token_type):
             return self._advance()
-        raise SyntaxError(f"{message} at line {self._peek().line}")
+
+        raise self._syntax_error(message)
+
+    def _syntax_error(
+        self,
+        message: str,
+        token: Optional[Token] = None
+    ) -> SyntaxError:
+        token = token or self._peek()
+
+        return SyntaxError(
+            f"{message} at line {token.line}, column {token.column}"
+        )
 
     # ---------------------------------------------------------------
     # PRIMARY
     # ---------------------------------------------------------------
+
     def _primary(self) -> ASTNode:
         # Handle parentheses
         if self._match(TokenType.LEFT_PAREN):
             expr = self._expression()
-            self._consume(TokenType.RIGHT_PAREN, "Expected ')' after expression")
+            self._consume(
+                TokenType.RIGHT_PAREN,
+                "Expected ')' after expression"
+            )
             return expr
 
         # Number literal
         if self._match(TokenType.NUMBER):
-            return NumberLiteral(self._previous().value)
+            token = self._previous()
+            return self._set_location(NumberLiteral(token.value), token)
 
         # String literal
         if self._match(TokenType.STRING):
-            return StringLiteral(self._previous().value)
+            token = self._previous()
+            return self._set_location(StringLiteral(token.value), token)
 
         # Boolean literals
         if self._match(TokenType.GOOD):
-            return BooleanLiteral(True)
+            token = self._previous()
+            return self._set_location(BooleanLiteral(True), token)
+
         if self._match(TokenType.BAD):
-            return BooleanLiteral(False)
+            token = self._previous()
+            return self._set_location(BooleanLiteral(False), token)
 
         # Variable reference or function call
         if self._match(TokenType.IDENTIFIER):
-            name = self._previous().value
+            name_token = self._previous()
+            name = name_token.value
 
             # Check if it's a function call: identifier(
             if self._check(TokenType.LEFT_PAREN):
-                return self._finish_call(name)
+                return self._finish_call(name, name_token)
 
-            return VariableReference(name)
+            return self._set_location(
+                VariableReference(name),
+                name_token
+            )
 
-        raise SyntaxError(
-            f"Unexpected token: {self._peek().value} at line {self._peek().line}"
+        token = self._peek()
+        raise self._syntax_error(
+            f"Unexpected token: {token.value!r}",
+            token
         )
 
-    def _finish_call(self, name: str) -> FunctionCall:
-        """Finish parsing a function call after the opening paren"""
+    def _finish_call(
+        self,
+        name: str,
+        name_token: Token
+    ) -> FunctionCall:
+        """Finish parsing a function call after the opening paren."""
         arguments = []
 
-        self._consume(TokenType.LEFT_PAREN, "Expected '(' after function name")
+        self._consume(
+            TokenType.LEFT_PAREN,
+            "Expected '(' after function name"
+        )
 
         # Parse arguments if any
         if not self._check(TokenType.RIGHT_PAREN):
             while True:
                 arguments.append(self._expression())
+
                 if not self._match(TokenType.COMMA):
                     break
 
-        self._consume(TokenType.RIGHT_PAREN, "Expected ')' after arguments")
-        return FunctionCall(name, arguments)
+        self._consume(
+            TokenType.RIGHT_PAREN,
+            "Expected ')' after arguments"
+        )
+
+        return self._set_location(
+            FunctionCall(name, arguments),
+            name_token
+        )
 
     # ---------------------------------------------------------------
-    # POSTFIX  (x++ , x--)
+    # POSTFIX (x++, x--)
     # ---------------------------------------------------------------
+
     def _postfix(self) -> ASTNode:
-        """Parse postfix operators: x++, x--"""
+        """Parse postfix operators: x++, x--."""
         expr = self._primary()
 
         while self._match(TokenType.INCREMENT, TokenType.DECREMENT):
-            operator = self._previous().value
+            operator_token = self._previous()
+            operator = operator_token.value
+
             if not isinstance(expr, VariableReference):
-                raise SyntaxError(
-                    f"'{operator}' can only be applied to a variable "
-                    f"at line {self._peek().line}"
+                raise self._syntax_error(
+                    f"'{operator}' can only be applied to a variable",
+                    operator_token
                 )
-            expr = IncrementDecrement(expr.name, operator, is_prefix=False)
+
+            expr = self._set_location(
+                IncrementDecrement(
+                    expr.name,
+                    operator,
+                    is_prefix=False
+                ),
+                operator_token
+            )
 
         return expr
 
     # ---------------------------------------------------------------
-    # UNARY  (-x, !x, ++x, --x)
+    # UNARY (-x, !x, ++x, --x)
     # ---------------------------------------------------------------
 
     def _unary(self) -> ASTNode:
-        """Parse prefix operators: -x, !x, ~x, ++x, --x"""
+        """Parse prefix operators: -x, !x, ~x, ++x, --x."""
 
         # Unary minus
         if self._match(TokenType.MINUS):
-            operator = self._previous().value
+            operator_token = self._previous()
+            operator = operator_token.value
             operand = self._unary()
-            return UnaryOperation(operator, operand)
+
+            return self._set_location(
+                UnaryOperation(operator, operand),
+                operator_token
+            )
 
         # Logical NOT
         if self._match(TokenType.NOT):
-            operator = self._previous().value
+            operator_token = self._previous()
+            operator = operator_token.value
             operand = self._unary()
-            return UnaryOperation(operator, operand)
+
+            return self._set_location(
+                UnaryOperation(operator, operand),
+                operator_token
+            )
 
         # Bitwise NOT
         if self._match(TokenType.BITWISE_NOT):
-            operator = self._previous().value
+            operator_token = self._previous()
+            operator = operator_token.value
             operand = self._unary()
-            return UnaryOperation(operator, operand)
+
+            return self._set_location(
+                UnaryOperation(operator, operand),
+                operator_token
+            )
 
         # Pre-increment / pre-decrement
         if self._match(TokenType.INCREMENT, TokenType.DECREMENT):
-            operator = self._previous().value
+            operator_token = self._previous()
+            operator = operator_token.value
+
             name_token = self._consume(
                 TokenType.IDENTIFIER,
                 f"Expected variable after '{operator}'"
             )
-            return IncrementDecrement(name_token.value, operator, is_prefix=True)
+
+            return self._set_location(
+                IncrementDecrement(
+                    name_token.value,
+                    operator,
+                    is_prefix=True
+                ),
+                operator_token
+            )
 
         return self._postfix()
 
+    # ---------------------------------------------------------------
+    # POWER (**)
+    # ---------------------------------------------------------------
 
-    # ---------------------------------------------------------------
-    # POWER  (**)
-    # ---------------------------------------------------------------
     def _power(self) -> ASTNode:
         expression = self._unary()
 
         if self._match(TokenType.POWER):
-            operator = self._previous().value
+            operator_token = self._previous()
+            operator = operator_token.value
             right = self._power()
 
-            expression = BinaryOperation(
-                expression,
-                operator,
-                right
+            expression = self._set_location(
+                BinaryOperation(expression, operator, right),
+                operator_token
             )
 
         return expression
 
     # ---------------------------------------------------------------
-    # MULTIPLICATION  (* / % //)
+    # MULTIPLICATION (*, /, %, //)
     # ---------------------------------------------------------------
+
     def _multiplication(self) -> ASTNode:
         left = self._power()
-        while self._match(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT, TokenType.DOUBLE_SLASH):
-            operator = self._previous().value
+
+        while self._match(
+            TokenType.STAR,
+            TokenType.SLASH,
+            TokenType.PERCENT,
+            TokenType.DOUBLE_SLASH
+        ):
+            operator_token = self._previous()
+            operator = operator_token.value
             right = self._power()
-            left = BinaryOperation(left, operator, right)
+
+            left = self._set_location(
+                BinaryOperation(left, operator, right),
+                operator_token
+            )
+
         return left
 
     # ---------------------------------------------------------------
-    # ADDITION  (+ -)
+    # ADDITION (+, -)
     # ---------------------------------------------------------------
+
     def _addition(self) -> ASTNode:
         left = self._multiplication()
+
         while self._match(TokenType.PLUS, TokenType.MINUS):
-            operator = self._previous().value
+            operator_token = self._previous()
+            operator = operator_token.value
             right = self._multiplication()
-            left = BinaryOperation(left, operator, right)
+
+            left = self._set_location(
+                BinaryOperation(left, operator, right),
+                operator_token
+            )
+
         return left
 
-    
-    # Bitwise shifts (<<, >>)
+    # ---------------------------------------------------------------
+    # BITWISE SHIFTS (<<, >>)
+    # ---------------------------------------------------------------
+
     def _shift(self) -> ASTNode:
         left = self._addition()
 
@@ -198,43 +299,78 @@ class Parser:
             TokenType.BITWISE_LEFT_SHIFT,
             TokenType.BITWISE_RIGHT_SHIFT
         ):
-            operator = self._previous().value
+            operator_token = self._previous()
+            operator = operator_token.value
             right = self._addition()
-            left = BinaryOperation(left, operator, right)
+
+            left = self._set_location(
+                BinaryOperation(left, operator, right),
+                operator_token
+            )
 
         return left
 
-    # Bitwise AND (&)
+    # ---------------------------------------------------------------
+    # BITWISE AND (&)
+    # ---------------------------------------------------------------
+
     def _bitwise_and(self) -> ASTNode:
         left = self._shift()
+
         while self._match(TokenType.BITWISE_AND):
-            operator = self._previous().value
+            operator_token = self._previous()
+            operator = operator_token.value
             right = self._shift()
-            left = BinaryOperation(left, operator, right)
+
+            left = self._set_location(
+                BinaryOperation(left, operator, right),
+                operator_token
+            )
+
         return left
 
-    # Bitwise XOR (^) has lower precedence than AND
+    # ---------------------------------------------------------------
+    # BITWISE XOR (^)
+    # ---------------------------------------------------------------
+
     def _bitwise_xor(self) -> ASTNode:
         left = self._bitwise_and()
+
         while self._match(TokenType.BITWISE_XOR):
-            operator = self._previous().value
+            operator_token = self._previous()
+            operator = operator_token.value
             right = self._bitwise_and()
-            left = BinaryOperation(left, operator, right)
+
+            left = self._set_location(
+                BinaryOperation(left, operator, right),
+                operator_token
+            )
+
         return left
 
-    # Bitwise OR (|) has lower precedence than XOR
+    # ---------------------------------------------------------------
+    # BITWISE OR (|)
+    # ---------------------------------------------------------------
+
     def _bitwise_or(self) -> ASTNode:
         left = self._bitwise_xor()
+
         while self._match(TokenType.BITWISE_OR):
-            operator = self._previous().value
+            operator_token = self._previous()
+            operator = operator_token.value
             right = self._bitwise_xor()
-            left = BinaryOperation(left, operator, right)
+
+            left = self._set_location(
+                BinaryOperation(left, operator, right),
+                operator_token
+            )
+
         return left
 
+    # ---------------------------------------------------------------
+    # COMPARISON (==, !=, >, <, >=, <=)
+    # ---------------------------------------------------------------
 
-    # ---------------------------------------------------------------
-    # COMPARISON  (== != > < >= <=)
-    # ---------------------------------------------------------------
     def _comparison(self) -> ASTNode:
         left = self._bitwise_or()
 
@@ -246,48 +382,78 @@ class Parser:
             TokenType.EQUAL_EQUAL,
             TokenType.NOT_EQUAL
         ):
-            operator = self._previous().value
+            operator_token = self._previous()
+            operator = operator_token.value
             right = self._bitwise_or()
-            left = BinaryOperation(left, operator, right)
+
+            left = self._set_location(
+                BinaryOperation(left, operator, right),
+                operator_token
+            )
 
         return left
 
     def _expression(self) -> ASTNode:
         return self._or()
 
-    # Logical OR (||) — lowest logical precedence
+    # ---------------------------------------------------------------
+    # LOGICAL OR (||)
+    # ---------------------------------------------------------------
+
     def _or(self) -> ASTNode:
         left = self._and()
 
         while self._match(TokenType.OR):
-            operator = self._previous().value
+            operator_token = self._previous()
+            operator = operator_token.value
             right = self._and()
-            left = BinaryOperation(left, operator, right)
+
+            left = self._set_location(
+                BinaryOperation(left, operator, right),
+                operator_token
+            )
 
         return left
 
-    # Logical AND (&&)
+    # ---------------------------------------------------------------
+    # LOGICAL AND (&&)
+    # ---------------------------------------------------------------
+
     def _and(self) -> ASTNode:
         left = self._not()
 
         while self._match(TokenType.AND):
-            operator = self._previous().value
+            operator_token = self._previous()
+            operator = operator_token.value
             right = self._not()
-            left = BinaryOperation(left, operator, right)
+
+            left = self._set_location(
+                BinaryOperation(left, operator, right),
+                operator_token
+            )
 
         return left
 
-    # Logical NOT (!) — highest logical precedence
+    # ---------------------------------------------------------------
+    # LOGICAL NOT (!)
+    # ---------------------------------------------------------------
+
     def _not(self) -> ASTNode:
         if self._match(TokenType.NOT):
-            operator = self._previous().value
-            return UnaryOperation(operator, self._not())
+            operator_token = self._previous()
+            operator = operator_token.value
+
+            return self._set_location(
+                UnaryOperation(operator, self._not()),
+                operator_token
+            )
 
         return self._comparison()
 
     # ---------------------------------------------------------------
-    # PRINT  (drop(...))
+    # PRINT (drop(...))
     # ---------------------------------------------------------------
+
     def _print_statement(self) -> PrintStatement:
         self._consume(
             TokenType.LEFT_PAREN,
@@ -304,9 +470,15 @@ class Parser:
         return PrintStatement(expr)
 
     # ---------------------------------------------------------------
-    # VARIABLE DECLARATION  (plant int x = 5 / root int x = 5)
+    # VARIABLE DECLARATION
+    # (plant int x = 5 / root int x = 5)
     # ---------------------------------------------------------------
-    def _variable_declaration(self, mutable: bool) -> VariableDeclaration:
+
+    def _variable_declaration(
+        self,
+        mutable: bool
+    ) -> VariableDeclaration:
+
         # Parse the type
         if self._match(TokenType.INT):
             var_type = 'int'
@@ -317,21 +489,30 @@ class Parser:
         elif self._match(TokenType.FLOAT):
             var_type = 'float'
         else:
-            raise SyntaxError(f"Expected type (int, str, bool, float) at line {self._peek().line}")
+            raise self._syntax_error(
+                "Expected type (int, str, bool, float)"
+            )
 
         # Parse the variable name
-        name_token = self._consume(TokenType.IDENTIFIER, "Expected variable name after type")
+        name_token = self._consume(
+            TokenType.IDENTIFIER,
+            "Expected variable name after type"
+        )
         name = name_token.value
 
         # Parse the initial value (optional)
         value = None
+
         if self._match(TokenType.EQUALS):
             value = self._expression()
 
-        return VariableDeclaration(mutable, var_type, name, value)
+        return self._set_location(
+            VariableDeclaration(mutable, var_type, name, value),
+            name_token
+        )
 
     # ---------------------------------------------------------------
-    # ASSIGNMENT  (x = 5)
+    # ASSIGNMENT (x = 5)
     # ---------------------------------------------------------------
 
     def _assignment(self):
@@ -353,8 +534,9 @@ class Parser:
         operator_token = self._peek()
 
         if operator_token.type not in operator_tokens:
-            raise SyntaxError(
-                f"Expected assignment operator at line {operator_token.line}"
+            raise self._syntax_error(
+                "Expected assignment operator",
+                operator_token
             )
 
         self._advance()
@@ -362,17 +544,23 @@ class Parser:
         value = self._expression()
 
         if operator == "=":
-            return Assignment(name, value)
+            return self._set_location(
+                Assignment(name, value),
+                operator_token
+            )
 
-        return CompoundAssignment(name, operator, value)
+        return self._set_location(
+            CompoundAssignment(name, operator, value),
+            operator_token
+        )
 
     # ---------------------------------------------------------------
     # RETURN
     # ---------------------------------------------------------------
+
     def _return_statement(self) -> ReturnStatement:
-        """Parse return statement: return x + 5"""
-        # The RETURN token has already been consumed by _match() in _statement()
-        # Check if it's an empty return (just 'return' with no value)
+        """Parse return statement: return x + 5."""
+
         if self._check(TokenType.RIGHT_BRACE):
             return ReturnStatement(None)
 
@@ -382,12 +570,15 @@ class Parser:
     # ---------------------------------------------------------------
     # FUNCTION PARAMETERS
     # ---------------------------------------------------------------
+
     def _parse_params(self) -> List[tuple]:
-        """Parse function parameters: int a, str b, bool c"""
+        """Parse function parameters: int a, str b, bool c."""
+
         params = []
 
         if not self._check(TokenType.RIGHT_PAREN):
             while True:
+
                 # Parse parameter type
                 if self._match(TokenType.INT):
                     param_type = 'int'
@@ -398,10 +589,15 @@ class Parser:
                 elif self._match(TokenType.FLOAT):
                     param_type = 'float'
                 else:
-                    raise SyntaxError(f"Expected type in parameter list at line {self._peek().line}")
+                    raise self._syntax_error(
+                        "Expected type in parameter list"
+                    )
 
                 # Parse parameter name
-                name_token = self._consume(TokenType.IDENTIFIER, "Expected parameter name")
+                name_token = self._consume(
+                    TokenType.IDENTIFIER,
+                    "Expected parameter name"
+                )
                 params.append((param_type, name_token.value))
 
                 if not self._match(TokenType.COMMA):
@@ -410,10 +606,12 @@ class Parser:
         return params
 
     # ---------------------------------------------------------------
-    # FUNCTION DECLARATION  (branch int add(int a, int b) { ... })
+    # FUNCTION DECLARATION
+    # (branch int add(int a, int b) { ... })
     # ---------------------------------------------------------------
+
     def _function_declaration(self) -> FunctionDeclaration:
-        """Parse function: branch int add(int a, int b) { ... }"""
+        """Parse function: branch int add(int a, int b) { ... }."""
 
         # Parse return type
         if self._match(TokenType.INT):
@@ -427,35 +625,56 @@ class Parser:
         elif self._match(TokenType.DROP):
             return_type = 'void'
         else:
-            raise SyntaxError(f"Expected return type at line {self._peek().line}")
+            raise self._syntax_error("Expected return type")
 
         # Parse function name
-        name_token = self._consume(TokenType.IDENTIFIER, "Expected function name")
+        name_token = self._consume(
+            TokenType.IDENTIFIER,
+            "Expected function name"
+        )
         name = name_token.value
 
         # Parse parameters
-        self._consume(TokenType.LEFT_PAREN, "Expected '(' after function name")
+        self._consume(
+            TokenType.LEFT_PAREN,
+            "Expected '(' after function name"
+        )
         params = self._parse_params()
-        self._consume(TokenType.RIGHT_PAREN, "Expected ')' after parameters")
+
+        self._consume(
+            TokenType.RIGHT_PAREN,
+            "Expected ')' after parameters"
+        )
 
         # Parse function body
-        self._consume(TokenType.LEFT_BRACE, "Expected '{' for function body")
+        self._consume(
+            TokenType.LEFT_BRACE,
+            "Expected '{' for function body"
+        )
         body = []
 
-        # Parse statements inside the function body
-        while not self._check(TokenType.RIGHT_BRACE) and not self._is_at_end():
+        while (
+            not self._check(TokenType.RIGHT_BRACE)
+            and not self._is_at_end()
+        ):
             stmt = self._statement()
             body.append(stmt)
 
-        self._consume(TokenType.RIGHT_BRACE, "Expected '}' to close function body")
+        self._consume(
+            TokenType.RIGHT_BRACE,
+            "Expected '}' to close function body"
+        )
 
-        return FunctionDeclaration(return_type, name, params, body)
+        return self._set_location(
+            FunctionDeclaration(return_type, name, params, body),
+            name_token
+        )
 
     # ---------------------------------------------------------------
     # IF / ELSE
     # ---------------------------------------------------------------
+
     def _if_statement(self) -> IfStatement:
-        # if (condition)
         self._consume(
             TokenType.LEFT_PAREN,
             "Expected '(' after 'if'"
@@ -468,7 +687,6 @@ class Parser:
             "Expected ')' after condition"
         )
 
-        # if { ... }
         self._consume(
             TokenType.LEFT_BRACE,
             "Expected '{' after condition"
@@ -476,7 +694,10 @@ class Parser:
 
         then_branch = []
 
-        while not self._check(TokenType.RIGHT_BRACE) and not self._is_at_end():
+        while (
+            not self._check(TokenType.RIGHT_BRACE)
+            and not self._is_at_end()
+        ):
             then_branch.append(self._statement())
 
         self._consume(
@@ -502,7 +723,10 @@ class Parser:
 
                 else_branch = []
 
-                while not self._check(TokenType.RIGHT_BRACE) and not self._is_at_end():
+                while (
+                    not self._check(TokenType.RIGHT_BRACE)
+                    and not self._is_at_end()
+                ):
                     else_branch.append(self._statement())
 
                 self._consume(
@@ -519,14 +743,9 @@ class Parser:
     # ---------------------------------------------------------------
     # FOR LOOP
     # ---------------------------------------------------------------
-    def _for_statement(self) -> ForStatement:
-        # for
-       # self._consume(
-        #    TokenType.FOR,
-        #    "Expected 'for'"
-        #)
 
-        # (
+    def _for_statement(self) -> ForStatement:
+
         self._consume(
             TokenType.LEFT_PAREN,
             "Expected '(' after 'for'"
@@ -534,11 +753,14 @@ class Parser:
 
         # initializer
         initializer = None
+
         if not self._check(TokenType.SEMICOLON):
             if self._match(TokenType.PLANT):
                 initializer = self._variable_declaration(mutable=True)
+
             elif self._match(TokenType.ROOT):
                 initializer = self._variable_declaration(mutable=False)
+
             else:
                 initializer = self._statement()
 
@@ -549,6 +771,7 @@ class Parser:
 
         # condition
         condition = None
+
         if not self._check(TokenType.SEMICOLON):
             condition = self._expression()
 
@@ -557,8 +780,9 @@ class Parser:
             "Expected ';' after for condition"
         )
 
-        # increment  (now handled by _expression → _unary/_postfix)
+        # increment
         increment = None
+
         if not self._check(TokenType.RIGHT_PAREN):
             increment = self._expression()
 
@@ -575,7 +799,10 @@ class Parser:
 
         body = []
 
-        while not self._check(TokenType.RIGHT_BRACE) and not self._is_at_end():
+        while (
+            not self._check(TokenType.RIGHT_BRACE)
+            and not self._is_at_end()
+        ):
             body.append(self._statement())
 
         self._consume(
@@ -593,40 +820,57 @@ class Parser:
     # ---------------------------------------------------------------
     # WHILE LOOP
     # ---------------------------------------------------------------
+
     def _while_statement(self) -> WhileStatement:
-        """Parse while loop: while (condition) { body }"""
+        """Parse while loop: while (condition) { body }."""
 
-        # consume '('
-        self._consume(TokenType.LEFT_PAREN, "Expected '(' after 'while'")
+        self._consume(
+            TokenType.LEFT_PAREN,
+            "Expected '(' after 'while'"
+        )
 
-        # parse the condition
         condition = self._expression()
 
-        self._consume(TokenType.RIGHT_PAREN, "Expected ')' after while condition")
+        self._consume(
+            TokenType.RIGHT_PAREN,
+            "Expected ')' after while condition"
+        )
 
-        # parse the body
-        self._consume(TokenType.LEFT_BRACE, "Expected '{' after while condition")
+        self._consume(
+            TokenType.LEFT_BRACE,
+            "Expected '{' after while condition"
+        )
 
         body = []
-        while not self._check(TokenType.RIGHT_BRACE) and not self._is_at_end():
+
+        while (
+            not self._check(TokenType.RIGHT_BRACE)
+            and not self._is_at_end()
+        ):
             stmt = self._statement()
             body.append(stmt)
 
-        self._consume(TokenType.RIGHT_BRACE, "Expected '}' to close while body")
+        self._consume(
+            TokenType.RIGHT_BRACE,
+            "Expected '}' to close while body"
+        )
 
         return WhileStatement(condition, body)
 
     # ---------------------------------------------------------------
     # STATEMENT DISPATCH
     # ---------------------------------------------------------------
+
     def _statement(self) -> ASTNode:
 
-        # Break 
+        # Break
         if self._match(TokenType.BREAK):
             return BreakStatement()
-        # continue
+
+        # Continue
         if self._match(TokenType.CONTINUE):
             return ContinueStatement()
+
         # Function declaration
         if self._match(TokenType.BRANCH):
             return self._function_declaration()
@@ -638,9 +882,9 @@ class Parser:
         # Variable declaration
         if self._match(TokenType.PLANT):
             return self._variable_declaration(mutable=True)
+
         if self._match(TokenType.ROOT):
             return self._variable_declaration(mutable=False)
-
 
         # Variable assignment
         if self._check(TokenType.IDENTIFIER):
@@ -653,10 +897,12 @@ class Parser:
                 TokenType.PERCENT_EQUALS,
             }
 
-            if (self.current + 1 < len(self.tokens) and
-                    self.tokens[self.current + 1].type in assignment_operators):
+            if (
+                self.current + 1 < len(self.tokens)
+                and self.tokens[self.current + 1].type
+                in assignment_operators
+            ):
                 return self._assignment()
-
 
         # Print statement
         if self._match(TokenType.DROP):
@@ -680,9 +926,21 @@ class Parser:
     # ---------------------------------------------------------------
     # ENTRY POINT
     # ---------------------------------------------------------------
+
     def parse(self) -> Program:
         statements = []
+
         while not self._is_at_end():
             stmt = self._statement()
             statements.append(stmt)
+
         return Program(statements)
+
+    # ---------------------------------------------------------------
+    # SOURCE LOCATION HELPER
+    # ---------------------------------------------------------------
+
+    def _set_location(self, node, token):
+        node.line = token.line
+        node.column = token.column
+        return node

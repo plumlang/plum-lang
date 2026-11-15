@@ -230,3 +230,29 @@ def test_multiple_numbers():
         20.5,
         300,
     ]
+
+
+# Error testing
+def test_token_tracks_starting_column():
+    tokens = Lexer("    plant int age = 20").tokenize()
+
+    assert tokens[0].column == 5
+    assert tokens[1].column == 11
+    assert tokens[2].column == 15
+
+
+def test_token_column_after_newline():
+    tokens = Lexer("drop(10)\n    drop(20)").tokenize()
+
+    assert tokens[0].column == 1
+    assert tokens[4].column == 5
+
+
+def test_unterminated_string_reports_location():
+    with pytest.raises(SyntaxError, match="line 1, column 6"):
+        Lexer('drop("hello').tokenize()
+
+
+def test_invalid_character_reports_column():
+    with pytest.raises(SyntaxError, match="line 1, column 6"):
+        Lexer("drop(@)").tokenize()

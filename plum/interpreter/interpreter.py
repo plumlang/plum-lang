@@ -1,5 +1,6 @@
 from plum.plum_ast import *
 from plum.plum_ast.ast import UnaryOperation
+from plum.interpreter.errors import PlumRuntimeError, PlumNameError
 
 
 class BreakException(Exception):
@@ -41,37 +42,63 @@ class Interpreter:
     # ---------------------------------------------------------------
     # SCOPE HELPERS
     # ---------------------------------------------------------------
+
     def _push_scope(self):
         self.scope_stack.append(
-            (self.current_env, self.current_types, self.current_constants)
+            (
+                self.current_env,
+                self.current_types,
+                self.current_constants
+            )
         )
+
         self.current_env = {}
         self.current_types = {}
         self.current_constants = set()
 
     def _pop_scope(self):
-        self.current_env, self.current_types, self.current_constants = (
-            self.scope_stack.pop()
-        )
+        (
+            self.current_env,
+            self.current_types,
+            self.current_constants
+        ) = self.scope_stack.pop()
 
-    def _find_scope(self, name):
-        """Return the environment and type metadata owning a variable."""
+    def _find_scope(self, name: str, node=None):
+        """
+        Find the scope containing a variable.
+
+        Local variables take priority over global variables.
+        This allows local variables to shadow global variables.
+        """
+
         if name in self.current_env:
-            return self.current_env, self.current_types, self.current_constants
+            return (
+                self.current_env,
+                self.current_types,
+                self.current_constants
+            )
 
         if name in self.global_env:
-            return self.global_env, self.global_types, self.global_constants
+            return (
+                self.global_env,
+                self.global_types,
+                self.global_constants
+            )
 
-        raise NameError(f"Undefined variable: '{name}'")
+        raise PlumNameError(
+            f"Undefined variable: '{name}'",
+            node
+        )
 
-    def _get_variable(self, name: str):
-        scope, _, _ = self._find_scope(name)
+    def _get_variable(self, name: str, node=None):
+        scope, _, _ = self._find_scope(name, node)
         return scope[name]
 
     # ---------------------------------------------------------------
     # TYPE CONVERSION
     # ---------------------------------------------------------------
-    def _coerce_value(self, var_type: str, value, var_name: str):
+
+    def _coerce_value(self, var_type: str, value, var_name: str, node=None):
         """
         Apply Plum's controlled implicit conversions.
 
@@ -79,9 +106,13 @@ class Interpreter:
             int -> float
 
         Rejected:
-            float -> int, bool -> int, int -> bool,
-            bool -> float, and string/numeric conversions.
+            float -> int
+            bool -> int
+            int -> bool
+            bool -> float
+            string/numeric conversions
         """
+
         if value is None:
             return None
 
@@ -89,36 +120,45 @@ class Interpreter:
 
         if var_type == "int":
             if actual_type is not int:
-                raise RuntimeError(
+                raise PlumRuntimeError(
                     f"Type error: Expected int, got {actual_type.__name__} "
-                    f"for '{var_name}'"
+                    f"for '{var_name}'",
+                    node
                 )
+
             return value
 
         if var_type == "float":
             if actual_type is int:
                 return float(value)
+
             if actual_type is float:
                 return value
-            raise RuntimeError(
+
+            raise PlumRuntimeError(
                 f"Type error: Expected float, got {actual_type.__name__} "
-                f"for '{var_name}'"
+                f"for '{var_name}'",
+                node
             )
 
         if var_type == "bool":
             if actual_type is not bool:
-                raise RuntimeError(
+                raise PlumRuntimeError(
                     f"Type error: Expected bool, got {actual_type.__name__} "
-                    f"for '{var_name}'"
+                    f"for '{var_name}'",
+                    node
                 )
+
             return value
 
         if var_type == "str":
             if actual_type is not str:
-                raise RuntimeError(
+                raise PlumRuntimeError(
                     f"Type error: Expected str, got {actual_type.__name__} "
-                    f"for '{var_name}'"
+                    f"for '{var_name}'",
+                    node
                 )
+
             return value
 
         # Unknown/user-defined types are left unchanged for now.
@@ -126,8 +166,9 @@ class Interpreter:
 
     def _declare_variable(self, node, value):
         """Declare a variable globally or in the active function scope."""
-        # An empty local environment is still a local scope. scope_stack tells
-        # us whether execution is currently inside a function call.
+
+        # An empty local environment is still a local scope.
+        # scope_stack tells us whether we are inside a function call.
         if self.scope_stack:
             scope = self.current_env
             types = self.current_types
@@ -137,10 +178,12 @@ class Interpreter:
             types = self.global_types
             constants = self.global_constants
 
-        # Local variables may shadow globals, but cannot be redeclared in
-        # the same scope.
+        # Variables cannot be redeclared in the same scope.
         if node.name in scope:
-            raise RuntimeError(f"Variable '{node.name}' is already declared")
+            raise PlumRuntimeError(
+                f"Variable '{node.name}' is already declared",
+                node
+            )
 
         scope[node.name] = value
         types[node.name] = node.var_type
@@ -151,6 +194,7 @@ class Interpreter:
     # ---------------------------------------------------------------
     # EXPRESSION HELPERS
     # ---------------------------------------------------------------
+
     @staticmethod
     def _is_number(value):
         return type(value) in (int, float)
@@ -159,88 +203,127 @@ class Interpreter:
     def _is_integer(value):
         return type(value) is int
 
-    def _binary_type_error(self, operator, left, right):
-        raise RuntimeError(
+    def _binary_type_error(self, operator, left, right, node=None):
+        raise PlumRuntimeError(
             f"Type error: Operator '{operator}' is not supported for "
-            f"{type(left).__name__} and {type(right).__name__}"
+            f"{type(left).__name__} and {type(right).__name__}",
+            node
         )
 
-    def _apply_binary_operator(self, operator, left, right):
-        """Evaluate a non-logical binary operation with Plum errors."""
+    def _apply_binary_operator(self, operator, left, right, node=None):
+        """Evaluate a non-logical binary operation."""
+
         try:
             if operator == "+":
                 return left + right
+
             if operator == "-":
                 return left - right
+
             if operator == "*":
                 return left * right
+
             if operator == "/":
                 if right == 0:
-                    raise RuntimeError("Division by zero!")
+                    raise PlumRuntimeError("Division by zero", node)
+
                 return left / right
+
             if operator == "%":
                 if right == 0:
-                    raise RuntimeError("Division by zero!")
+                    raise PlumRuntimeError("Division by zero", node)
+
                 return left % right
+
             if operator == "//":
                 if right == 0:
-                    raise RuntimeError("Division by zero!")
+                    raise PlumRuntimeError("Division by zero", node)
+
                 return left // right
+
             if operator == "**":
                 return left ** right
 
             if operator in ("&", "|", "^", "<<", ">>"):
+
                 if not self._is_integer(left) or not self._is_integer(right):
-                    raise RuntimeError(
-                        f"Operator '{operator}' requires integer operands"
+                    raise PlumRuntimeError(
+                        f"Operator '{operator}' requires integer operands",
+                        node
                     )
+
                 if operator in ("<<", ">>") and right < 0:
-                    raise RuntimeError("Shift count cannot be negative")
+                    raise PlumRuntimeError(
+                        "Shift count cannot be negative",
+                        node
+                    )
+
                 if operator == "&":
                     return left & right
+
                 if operator == "|":
                     return left | right
+
                 if operator == "^":
                     return left ^ right
+
                 if operator == "<<":
                     return left << right
+
                 return left >> right
 
             if operator == "==":
                 return left == right
+
             if operator == "!=":
                 return left != right
+
             if operator == ">":
                 return left > right
+
             if operator == "<":
                 return left < right
+
             if operator == ">=":
                 return left >= right
+
             if operator == "<=":
                 return left <= right
 
-        except TypeError as exc:
-            self._binary_type_error(operator, left, right)
+        except PlumRuntimeError:
+            raise
 
-        raise RuntimeError(f"Unknown operator: {operator}")
+        except TypeError:
+            self._binary_type_error(operator, left, right, node)
+
+        raise PlumRuntimeError(
+            f"Unknown operator: {operator}",
+            node
+        )
 
     # ---------------------------------------------------------------
     # MAIN EVALUATOR
     # ---------------------------------------------------------------
+
     def _evaluate(self, node: ASTNode):
+
         if isinstance(node, Program):
             for statement in node.statements:
                 self._evaluate(statement)
+
             return None
 
         if isinstance(node, PrintStatement):
             value = self._evaluate(node.expression)
+
             if type(value) is bool:
                 print("true" if value else "false")
             else:
                 print(value)
+
             return value
 
+        # Literals
         if isinstance(node, NumberLiteral):
             return node.value
 
@@ -250,37 +333,79 @@ class Interpreter:
         if isinstance(node, StringLiteral):
             return node.value
 
-        # Variable declaration
+        # -----------------------------------------------------------
+        # VARIABLE DECLARATION
+        # -----------------------------------------------------------
+
         if isinstance(node, VariableDeclaration):
             value = None
+
             if node.value is not None:
                 value = self._evaluate(node.value)
 
-            value = self._coerce_value(node.var_type, value, node.name)
+            value = self._coerce_value(
+                node.var_type,
+                value,
+                node.name,
+                node
+            )
+
             self._declare_variable(node, value)
+
             return value
 
-        # Variable reference
-        if isinstance(node, VariableReference):
-            return self._get_variable(node.name)
+        # -----------------------------------------------------------
+        # VARIABLE REFERENCE
+        # -----------------------------------------------------------
 
-        # Assignment
+        if isinstance(node, VariableReference):
+            return self._get_variable(node.name, node)
+
+        # -----------------------------------------------------------
+        # ASSIGNMENT
+        # -----------------------------------------------------------
+
         if isinstance(node, Assignment):
-            scope, types, constants = self._find_scope(node.name)
+            scope, types, constants = self._find_scope(
+                node.name,
+                node
+            )
+
             if node.name in constants:
-                raise RuntimeError(f"Cannot reassign constant '{node.name}'")
+                raise PlumRuntimeError(
+                    f"Cannot reassign constant '{node.name}'",
+                    node
+                )
 
             value = self._evaluate(node.value)
+
             if node.name in types:
-                value = self._coerce_value(types[node.name], value, node.name)
+                value = self._coerce_value(
+                    types[node.name],
+                    value,
+                    node.name,
+                    node
+                )
+
             scope[node.name] = value
+
             return None
 
-        # Compound assignment
+        # -----------------------------------------------------------
+        # COMPOUND ASSIGNMENT
+        # -----------------------------------------------------------
+
         if isinstance(node, CompoundAssignment):
-            scope, types, constants = self._find_scope(node.name)
+            scope, types, constants = self._find_scope(
+                node.name,
+                node
+            )
+
             if node.name in constants:
-                raise RuntimeError(f"Cannot reassign constant '{node.name}'")
+                raise PlumRuntimeError(
+                    f"Cannot reassign constant '{node.name}'",
+                    node
+                )
 
             old_value = scope[node.name]
             right_value = self._evaluate(node.value)
@@ -292,52 +417,89 @@ class Interpreter:
                 "/=": "/",
                 "%=": "%",
             }
+
             if node.operator not in operators:
-                raise RuntimeError(
-                    f"Unsupported compound assignment: '{node.operator}'"
+                raise PlumRuntimeError(
+                    f"Unsupported compound assignment: '{node.operator}'",
+                    node
                 )
 
             new_value = self._apply_binary_operator(
-                operators[node.operator], old_value, right_value
+                operators[node.operator],
+                old_value,
+                right_value,
+                node
             )
+
             if node.name in types:
                 new_value = self._coerce_value(
-                    types[node.name], new_value, node.name
+                    types[node.name],
+                    new_value,
+                    node.name,
+                    node
                 )
+
             scope[node.name] = new_value
+
             return None
 
-        # Function declaration
+        # -----------------------------------------------------------
+        # FUNCTION DECLARATION
+        # -----------------------------------------------------------
+
         if isinstance(node, FunctionDeclaration):
             self.functions[node.name] = node
             return None
 
-        # Function call
-        if isinstance(node, FunctionCall):
-            if node.name not in self.functions:
-                raise NameError(f"Undefined function: '{node.name}'")
+        # -----------------------------------------------------------
+        # FUNCTION CALL
+        # -----------------------------------------------------------
 
-            func = self.functions[node.name]
-            if len(node.arguments) != len(func.params):
-                raise RuntimeError(
-                    f"Function '{node.name}' expects {len(func.params)} arguments, "
-                    f"got {len(node.arguments)}"
+        if isinstance(node, FunctionCall):
+
+            if node.name not in self.functions:
+                raise PlumNameError(
+                    f"Undefined function: '{node.name}'",
+                    node
                 )
 
-            arg_values = [self._evaluate(arg) for arg in node.arguments]
+            func = self.functions[node.name]
+
+            if len(node.arguments) != len(func.params):
+                raise PlumRuntimeError(
+                    f"Function '{node.name}' expects "
+                    f"{len(func.params)} arguments, "
+                    f"got {len(node.arguments)}",
+                    node
+                )
+
+            arg_values = [
+                self._evaluate(arg)
+                for arg in node.arguments
+            ]
 
             self._push_scope()
+
             result = None
+
             try:
-                for (param_type, param_name), arg in zip(func.params, arg_values):
+                for (param_type, param_name), arg in zip(
+                    func.params,
+                    arg_values
+                ):
                     self.current_env[param_name] = self._coerce_value(
-                        param_type, arg, f"parameter '{param_name}'"
+                        param_type,
+                        arg,
+                        f"parameter '{param_name}'",
+                        node
                     )
+
                     self.current_types[param_name] = param_type
 
                 try:
                     for statement in func.body:
                         self._evaluate(statement)
+
                 except ReturnException as returned:
                     result = returned.value
 
@@ -345,40 +507,66 @@ class Interpreter:
                 self._pop_scope()
 
             if func.return_type == "void":
+
                 if result is not None:
-                    raise RuntimeError(
-                        f"Void function '{node.name}' cannot return a value"
+                    raise PlumRuntimeError(
+                        f"Void function '{node.name}' cannot return a value",
+                        node
                     )
+
                 return None
 
             if result is None:
-                raise RuntimeError(
+                raise PlumRuntimeError(
                     f"Function '{node.name}' must return a value of type "
-                    f"'{func.return_type}'"
+                    f"'{func.return_type}'",
+                    node
                 )
 
             return self._coerce_value(
-                func.return_type, result, f"return value of function '{node.name}'"
+                func.return_type,
+                result,
+                f"return value of function '{node.name}'",
+                node
             )
 
-        # Return statement
+        # -----------------------------------------------------------
+        # RETURN STATEMENT
+        # -----------------------------------------------------------
+
         if isinstance(node, ReturnStatement):
             value = None
+
             if node.value is not None:
                 value = self._evaluate(node.value)
+
             raise ReturnException(value)
 
-        # If / else
+        # -----------------------------------------------------------
+        # IF / ELSE
+        # -----------------------------------------------------------
+
         if isinstance(node, IfStatement):
             condition = self._evaluate(node.condition)
-            branch = node.then_branch if condition else node.else_branch
+
+            branch = (
+                node.then_branch
+                if condition
+                else node.else_branch
+            )
+
             if branch is not None:
                 for statement in branch:
                     self._evaluate(statement)
+
             return None
 
-        # For loop
+        # -----------------------------------------------------------
+        # FOR LOOP
+        # -----------------------------------------------------------
+
         if isinstance(node, ForStatement):
+
             if node.initializer is not None:
                 self._evaluate(node.initializer)
 
@@ -386,29 +574,45 @@ class Interpreter:
                 node.condition is not None
                 and bool(self._evaluate(node.condition))
             ):
+
                 try:
                     for statement in node.body:
                         self._evaluate(statement)
+
                 except BreakException:
                     break
+
                 except ContinueException:
                     pass
 
                 if node.increment is not None:
                     self._evaluate(node.increment)
+
             return None
 
-        # While loop
+        # -----------------------------------------------------------
+        # WHILE LOOP
+        # -----------------------------------------------------------
+
         if isinstance(node, WhileStatement):
+
             while bool(self._evaluate(node.condition)):
+
                 try:
                     for statement in node.body:
                         self._evaluate(statement)
+
                 except BreakException:
                     break
+
                 except ContinueException:
                     continue
+
             return None
+
+        # -----------------------------------------------------------
+        # BREAK / CONTINUE
+        # -----------------------------------------------------------
 
         if isinstance(node, BreakStatement):
             raise BreakException()
@@ -416,71 +620,126 @@ class Interpreter:
         if isinstance(node, ContinueStatement):
             raise ContinueException()
 
-        # Increment / decrement
+        # -----------------------------------------------------------
+        # INCREMENT / DECREMENT
+        # -----------------------------------------------------------
+
         if isinstance(node, IncrementDecrement):
-            scope, types, constants = self._find_scope(node.name)
+            scope, types, constants = self._find_scope(
+                node.name,
+                node
+            )
+
             if node.name in constants:
-                raise RuntimeError(f"Cannot modify constant '{node.name}'")
+                raise PlumRuntimeError(
+                    f"Cannot modify constant '{node.name}'",
+                    node
+                )
 
             old_value = scope[node.name]
+
             if type(old_value) not in (int, float):
-                raise RuntimeError(
-                    f"Type error: Operator '{node.operator}' requires a numeric variable"
+                raise PlumRuntimeError(
+                    f"Type error: Operator '{node.operator}' "
+                    f"requires a numeric variable",
+                    node
                 )
 
             if node.operator == "++":
                 new_value = old_value + 1
+
             elif node.operator == "--":
                 new_value = old_value - 1
+
             else:
-                raise RuntimeError(
-                    f"Unknown increment operator: {node.operator}"
+                raise PlumRuntimeError(
+                    f"Unknown increment operator: {node.operator}",
+                    node
                 )
 
             if node.name in types:
-                new_value = self._coerce_value(types[node.name], new_value, node.name)
+                new_value = self._coerce_value(
+                    types[node.name],
+                    new_value,
+                    node.name,
+                    node
+                )
 
             scope[node.name] = new_value
+
             return new_value if node.is_prefix else old_value
 
-        # Unary operations
+        # -----------------------------------------------------------
+        # UNARY OPERATIONS
+        # -----------------------------------------------------------
+
         if isinstance(node, UnaryOperation):
             operand = self._evaluate(node.operand)
 
             if node.operator == "-":
+
                 if type(operand) not in (int, float):
-                    raise RuntimeError("Unary '-' requires a numeric operand")
+                    raise PlumRuntimeError(
+                        "Unary '-' requires a numeric operand",
+                        node
+                    )
+
                 return -operand
 
             if node.operator == "!":
                 return not bool(operand)
 
             if node.operator == "~":
+
                 if type(operand) is not int:
-                    raise RuntimeError(
-                        "Operator '~' requires an integer operand"
+                    raise PlumRuntimeError(
+                        "Operator '~' requires an integer operand",
+                        node
                     )
+
                 return ~operand
 
-            raise RuntimeError(f"Unknown unary operator: {node.operator}")
+            raise PlumRuntimeError(
+                f"Unknown unary operator: {node.operator}",
+                node
+            )
 
-        # Binary operations. Logical operators must short-circuit.
+        # -----------------------------------------------------------
+        # BINARY OPERATIONS
+        # -----------------------------------------------------------
+
         if isinstance(node, BinaryOperation):
             left_val = self._evaluate(node.left)
 
+            # Logical operators must short-circuit.
             if node.operator == "&&":
+
                 if not bool(left_val):
                     return False
+
                 return bool(self._evaluate(node.right))
 
             if node.operator == "||":
+
                 if bool(left_val):
                     return True
+
                 return bool(self._evaluate(node.right))
 
             right_val = self._evaluate(node.right)
+
             return self._apply_binary_operator(
-                node.operator, left_val, right_val
+                node.operator,
+                left_val,
+                right_val,
+                node
             )
 
-        raise RuntimeError(f"Unknown AST node type: {type(node).__name__}")
+        # -----------------------------------------------------------
+        # UNKNOWN AST NODE
+        # -----------------------------------------------------------
+
+        raise PlumRuntimeError(
+            f"Unknown AST node type: {type(node).__name__}",
+            node
+        )

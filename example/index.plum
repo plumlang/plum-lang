@@ -1,2 +1,2 @@
-plant int result = 2 + 3 * 4
-drop(result)
+plant int a = 10
+drop(a)
