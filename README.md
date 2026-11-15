@@ -1,4 +1,3 @@
-
 # 🍑 Plum Programming Language
 
 A lightweight interpreted programming language built from scratch in Python to explore compiler design, parsing, and language implementation.
@@ -35,6 +34,7 @@ Plum currently includes:
 | v0.10 | Bitwise, Shift & Compound Assignment Operators | [Read docs](docs/v0.10.md) |
 
 ## ✨ Features
+
 ### v0.10 — Bitwise, Shift & Compound Assignment Operators
 
 - 🔢 Bitwise AND: `&`
@@ -210,15 +210,62 @@ Plum processes source code through three main stages:
 
 This architecture makes Plum a practical project for learning how programming languages process and execute code.
 
-## 🗺️ Roadmap
+## 🗺️ Development Roadmap
 
-Potential future improvements:
+Plum is being developed incrementally, with each stage focusing on improving the language's reliability, capabilities, and execution architecture.
 
-- Bitwise shift operators
-- Improved runtime error messages
-- Expanded automated testing
-- More language features and standard-library functionality
+### Stage 1: v0.11 — Reliability Release
+
+**Focus: Making the existing implementation dependable.**
+
+No major new language syntax. This release focuses on correctness, consistency, and maintainability.
+
+- 🧪 Automated lexer tests
+- 🌳 Automated parser tests
+- 🔄 Interpreter regression tests
+- ⚖️ Correct operator associativity
+- 🛡️ Consistent runtime error handling
+- 📍 Source line and column tracking
+- ↩️ Correct propagation of `return`, `break`, and `continue`
+- 🧹 Remove debugging output from normal execution
+
+### Stage 2: v0.12 — Semantic Analysis
+
+**Focus: Understanding program meaning before execution.**
+
+- 📚 Symbol table implementation
+- 🔍 Scope resolution
+- ⚖️ Static type checking
+- 🧩 Function signature validation
+- 🚫 Duplicate declaration detection
+- ↩️ Return type validation
+
+### Stage 3: v0.13 — Language Capabilities
+
+**Focus: Making Plum more expressive and practical.**
+
+- 📋 List data structures
+- 🔢 List indexing
+- ⚙️ Built-in functions
+- 🔤 String methods
+- 🔄 `for-in` iteration
+- 📦 Standard library foundation
+- 🌳 Improved function and scope behavior
+
+### Stage 4: v0.14 — Runtime Evolution
+
+**Focus: Moving beyond tree-walking interpretation.**
+
+- 🧱 Bytecode instruction design
+- ⚙️ Bytecode compiler
+- 📚 Stack-based Virtual Machine (VM)
+- 🔄 Compare VM execution with tree-walking execution
+- 📊 Performance benchmarks
 
 ## 🎯 Project Goal
 
-python3 -m plum.main  example/main.plum
+The long-term goal of Plum is to evolve from a simple tree-walking interpreter into a more complete programming language implementation.
+
+Through incremental development, the project explores the fundamental concepts behind programming languages, including lexical analysis, parsing, AST construction, semantic analysis, runtime execution, and virtual machine design.
+
+Rather than implementing everything at once, Plum is built one version at a time, with an emphasis on understanding how each component works internally.

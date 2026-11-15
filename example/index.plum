@@ -1,9 +1,2 @@
-drop("hello world! this is plum")
-drop("Additon ->")
-drop(10+10)
-drop("Minus ->")
-drop(10-5)
-drop("Multiplication ->")
-drop(10*10)
-drop("Division ->")
-drop(10/10)
+plant int result = 2 + 3 * 4
+drop(result)

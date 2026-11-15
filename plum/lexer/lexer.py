@@ -254,7 +254,7 @@ class Lexer:
                 continue
 
             # Identifiers (keywords and variable names)
-            if current.isalpha():
+            if current.isalpha() or current == '_':
                self.tokens.append(self._identifier())
                continue
 
@@ -265,21 +265,32 @@ class Lexer:
         return self.tokens
     
 
+    
     def _string(self) -> Token:
-        self.position += 1 #skip opening quote
+        self.position += 1  # Skip opening quote
+
         start = self.position
+        start_line = self.line
+
         while (
             self.position < len(self.source)
             and self.source[self.position] != '"'
         ):
+            if self.source[self.position] == '\n':
+                self.line += 1
+
             self.position += 1
+
         if self.position >= len(self.source):
             raise SyntaxError(
-                f"Unterminated String on line {self.line}"
+            f"Unterminated String on line {start_line}"
             )
+
         value = self.source[start:self.position]
-        self.position += 1 #skip closing quote
-        return Token(TokenType.STRING, value, self.line)
+        self.position += 1  # Skip closing quote
+
+        return Token(TokenType.STRING, value, start_line)
+
     
 
     def _identifier(self) -> Token:
@@ -350,25 +361,41 @@ class Lexer:
         return Token(TokenType.IDENTIFIER, value, self.line)
 
 
+    
     def _number(self) -> Token:
         start = self.position
 
+        # Read integer digits
         while (
             self.position < len(self.source)
             and self.source[self.position].isdigit()
-        ):  
+        ):
             self.position += 1
 
-        # Handle decimal points (e.g., 3.14)
-        if (self.position < len(self.source) 
-            and self.source[self.position] == '.' 
+        # Check for a decimal point
+        is_float = False
+
+        if (
+            self.position < len(self.source)
+            and self.source[self.position] == '.'
             and self.position + 1 < len(self.source)
-            and self.source[self.position + 1].isdigit()):
-            
-            self.position += 1  # skip the '.'
-            while (self.position < len(self.source) 
-                   and self.source[self.position].isdigit()):
+            and self.source[self.position + 1].isdigit()
+        ):
+            is_float = True
+            self.position += 1
+
+            while (
+                self.position < len(self.source)
+                and self.source[self.position].isdigit()
+            ):
                 self.position += 1
 
+        # Convert to the correct numeric type
         value = self.source[start:self.position]
+
+        if is_float:
+            value = float(value)
+        else:
+            value = int(value)
+
         return Token(TokenType.NUMBER, value, self.line)
