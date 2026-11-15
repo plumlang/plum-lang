@@ -1,40 +1,56 @@
+
 import sys
 
 from .lexer import Lexer
 from .parser import Parser
 from .interpreter import Interpreter
+from .interpreter.errors import PlumRuntimeError, PlumNameError
 
 
 def run_file(filename: str):
     """Read and run a .plum file"""
-    with open(filename, "r") as file:
-        content = file.read()
+    try:
+        with open(filename, "r") as file:
+            content = file.read()
 
-    run(content)
+        run(content)
+
+    except FileNotFoundError:
+        print(f"Error: File not found: '{filename}'")
+        sys.exit(1)
+
+    except OSError as error:
+        print(f"Error reading file: {error}")
+        sys.exit(1)
 
 
 def run(source: str):
     """Lex, parse, and interpret source code"""
 
-    print("--- LEXER OUTPUT ---")
+    try:
+        print("--- LEXER OUTPUT ---")
 
-    lexer = Lexer(source=source)
-    tokens = lexer.tokenize()
+        lexer = Lexer(source=source)
+        tokens = lexer.tokenize()
 
-    for token in tokens:
-        print(token)
+        for token in tokens:
+            print(token)
 
-    print("\n--- PARSER OUTPUT ---")
+        print("\n--- PARSER OUTPUT ---")
 
-    parser = Parser(tokens)
-    program = parser.parse()
+        parser = Parser(tokens)
+        program = parser.parse()
 
-    print(program)
+        print(program)
 
-    print("\n--- INTERPRETER OUTPUT ---")
+        print("\n--- INTERPRETER OUTPUT ---")
 
-    interpreter = Interpreter()
-    interpreter.interpret(program)
+        interpreter = Interpreter()
+        interpreter.interpret(program)
+
+    except (PlumRuntimeError, PlumNameError) as error:
+        print(error)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

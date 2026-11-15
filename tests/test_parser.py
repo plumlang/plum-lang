@@ -392,3 +392,61 @@ def test_invalid_expression_raises_syntax_error():
 def test_missing_closing_parenthesis_raises_syntax_error():
     with pytest.raises(SyntaxError):
         parse_source("drop(10")
+
+
+# Custom error testing
+
+def parse_source(source):
+    tokens = Lexer(source).tokenize()
+    parser = Parser(tokens)
+    return parser.parse()
+
+
+def test_missing_parenthesis_reports_line_and_column():
+    source = "drop(10"
+
+    with pytest.raises(
+        SyntaxError,
+        match=r"line 1, column 8"
+    ):
+        parse_source(source)
+
+
+def test_unexpected_token_reports_line_and_column():
+    source = "drop(10 + )"
+
+    with pytest.raises(
+        SyntaxError,
+        match=r"line 1, column 11"
+    ):
+        parse_source(source)
+
+
+def test_error_location_after_newline():
+    source = "drop(10)\ndrop(20 + )"
+
+    with pytest.raises(
+        SyntaxError,
+        match=r"line 2, column 11"
+    ):
+        parse_source(source)
+
+
+def test_missing_variable_type_reports_location():
+    source = "plant age = 20"
+
+    with pytest.raises(
+        SyntaxError,
+        match=r"line 1, column 7"
+    ):
+        parse_source(source)
+
+
+def test_missing_function_return_type_reports_location():
+    source = "branch add() {}"
+
+    with pytest.raises(
+        SyntaxError,
+        match=r"line 1, column 8"
+    ):
+        parse_source(source)

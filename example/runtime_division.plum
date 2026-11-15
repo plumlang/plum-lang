@@ -1,0 +1,2 @@
+plant int number = 10
+drop(number / 0)
