@@ -52,7 +52,7 @@ class Parser:
 
         # Number literal
         if self._match(TokenType.NUMBER):
-            return NumberLiteral(float(self._previous().value))
+            return NumberLiteral(self._previous().value)
 
         # String literal
         if self._match(TokenType.STRING):
@@ -153,12 +153,19 @@ class Parser:
     # POWER  (**)
     # ---------------------------------------------------------------
     def _power(self) -> ASTNode:
-        left = self._unary()
-        while self._match(TokenType.POWER):
+        expression = self._unary()
+
+        if self._match(TokenType.POWER):
             operator = self._previous().value
-            right = self._unary()
-            left = BinaryOperation(left, operator, right)
-        return left
+            right = self._power()
+
+            expression = BinaryOperation(
+                expression,
+                operator,
+                right
+            )
+
+        return expression
 
     # ---------------------------------------------------------------
     # MULTIPLICATION  (* / % //)
@@ -514,10 +521,10 @@ class Parser:
     # ---------------------------------------------------------------
     def _for_statement(self) -> ForStatement:
         # for
-        self._consume(
-            TokenType.FOR,
-            "Expected 'for'"
-        )
+       # self._consume(
+        #    TokenType.FOR,
+        #    "Expected 'for'"
+        #)
 
         # (
         self._consume(
@@ -613,6 +620,13 @@ class Parser:
     # STATEMENT DISPATCH
     # ---------------------------------------------------------------
     def _statement(self) -> ASTNode:
+
+        # Break 
+        if self._match(TokenType.BREAK):
+            return BreakStatement()
+        # continue
+        if self._match(TokenType.CONTINUE):
+            return ContinueStatement()
         # Function declaration
         if self._match(TokenType.BRANCH):
             return self._function_declaration()
