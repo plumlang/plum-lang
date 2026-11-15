@@ -1,4 +1,13 @@
-for(plant int i=0; i<=10; i++) {
-    drop(i)
-}
+plant int count = 0
 
+        for (plant int i = 0; i < 3; i++) {
+            for (plant int j = 0; j < 5; j++) {
+                if (j == 1) {
+                    break
+                }
+
+                count++
+            }
+        }
+
+        drop(count)
