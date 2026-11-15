@@ -43,51 +43,58 @@ class Interpreter:
     # SCOPE HELPERS
     # ---------------------------------------------------------------
 
-    def _push_scope(self):
+    def _push_scope(self, scope_type="function"):
         self.scope_stack.append(
-            (
-                self.current_env,
-                self.current_types,
-                self.current_constants
-            )
+        (
+            self.current_env,
+            self.current_types,
+            self.current_constants,
+            scope_type,
+        )
         )
 
         self.current_env = {}
         self.current_types = {}
         self.current_constants = set()
 
+
     def _pop_scope(self):
         (
-            self.current_env,
-            self.current_types,
-            self.current_constants
+        self.current_env,
+        self.current_types,
+        self.current_constants,
+        _,
         ) = self.scope_stack.pop()
 
-    def _find_scope(self, name: str, node=None):
-        """
-        Find the scope containing a variable.
 
-        Local variables take priority over global variables.
-        This allows local variables to shadow global variables.
-        """
+    def _find_scope(self, name: str, node=None):
+        """Find a variable in the current and enclosing scopes."""
 
         if name in self.current_env:
             return (
-                self.current_env,
-                self.current_types,
-                self.current_constants
+            self.current_env,
+            self.current_types,
+            self.current_constants,
             )
+
+        # Search enclosing loop scopes, but never cross a function boundary.
+        for env, types, constants, scope_type in reversed(self.scope_stack):
+            if scope_type == "function":
+                break
+
+            if name in env:
+                return env, types, constants
 
         if name in self.global_env:
             return (
-                self.global_env,
-                self.global_types,
-                self.global_constants
+            self.global_env,
+            self.global_types,
+            self.global_constants,
             )
 
         raise PlumNameError(
             f"Undefined variable: '{name}'",
-            node
+            node,
         )
 
     def _get_variable(self, name: str, node=None):
@@ -566,49 +573,53 @@ class Interpreter:
         # -----------------------------------------------------------
 
         if isinstance(node, ForStatement):
+            self._push_scope("loop")
 
-            if node.initializer is not None:
-                self._evaluate(node.initializer)
+            try:
+                if node.initializer is not None:
+                    self._evaluate(node.initializer)
 
-            while (
-                node.condition is not None
-                and bool(self._evaluate(node.condition))
-            ):
+                while (node.condition is None or bool(self._evaluate(node.condition))):
+                    try:
+                        for statement in node.body:
+                            self._evaluate(statement)
 
-                try:
-                    for statement in node.body:
-                        self._evaluate(statement)
+                    except BreakException:
+                        break
 
-                except BreakException:
-                    break
+                    except ContinueException:
+                        pass
 
-                except ContinueException:
-                    pass
+                    if node.increment is not None:
+                        self._evaluate(node.increment)
 
-                if node.increment is not None:
-                    self._evaluate(node.increment)
+                return None
 
-            return None
+            finally:
+                self._pop_scope()
 
         # -----------------------------------------------------------
         # WHILE LOOP
         # -----------------------------------------------------------
 
         if isinstance(node, WhileStatement):
+            self._push_scope("loop")
 
-            while bool(self._evaluate(node.condition)):
+            try:
+                while bool(self._evaluate(node.condition)):
+                    try: 
+                        for statement in node.body:
+                            self._evaluate(statement)
+                    except BreakException:
+                        break
 
-                try:
-                    for statement in node.body:
-                        self._evaluate(statement)
+                    except ContinueException:
+                        continue
 
-                except BreakException:
-                    break
+                return
 
-                except ContinueException:
-                    continue
-
-            return None
+            finally:
+                self._pop_scope() 
 
         # -----------------------------------------------------------
         # BREAK / CONTINUE

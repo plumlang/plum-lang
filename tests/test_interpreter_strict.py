@@ -74,11 +74,7 @@ def test_int_rejects_boolean():
         run_source("plant int age = good")
 
 
-def test_float_accepts_integer_implicit_conversion():
-    interpreter = run_source("plant float price = 12")
 
-    assert type(interpreter.global_env["price"]) is float
-    assert interpreter.global_env["price"] == 12.0
 
 def test_float_accepts_integer_implicit_conversion():
     interpreter = run_source("plant float price = 12")
