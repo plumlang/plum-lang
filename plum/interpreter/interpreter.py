@@ -31,6 +31,10 @@ class Interpreter:
         self.current_constants = set()
         self.scope_stack = []
 
+        # Control-flow state is isolated at function boundaries.
+        self.loop_depth = 0
+        self.function_depth = 0
+
         # Kept for compatibility with code that may inspect this attribute.
         self.var_types = self.global_types
 
@@ -485,6 +489,11 @@ class Interpreter:
                 for arg in node.arguments
             ]
 
+            # A function must not inherit the caller's active loops.
+            # Its own loops can still use break and continue normally.
+            caller_loop_depth = self.loop_depth
+            self.loop_depth = 0
+            self.function_depth += 1
             self._push_scope()
 
             result = None
@@ -512,6 +521,8 @@ class Interpreter:
 
             finally:
                 self._pop_scope()
+                self.function_depth -= 1
+                self.loop_depth = caller_loop_depth
 
             if func.return_type == "void":
 
@@ -542,6 +553,12 @@ class Interpreter:
         # -----------------------------------------------------------
 
         if isinstance(node, ReturnStatement):
+            if self.function_depth == 0:
+                raise PlumRuntimeError(
+                    "Return statement outside function",
+                    node
+                )
+
             value = None
 
             if node.value is not None:
@@ -574,12 +591,16 @@ class Interpreter:
 
         if isinstance(node, ForStatement):
             self._push_scope("loop")
+            self.loop_depth += 1
 
             try:
                 if node.initializer is not None:
                     self._evaluate(node.initializer)
 
-                while (node.condition is None or bool(self._evaluate(node.condition))):
+                while (
+                    node.condition is None
+                    or bool(self._evaluate(node.condition))
+                ):
                     try:
                         for statement in node.body:
                             self._evaluate(statement)
@@ -596,6 +617,7 @@ class Interpreter:
                 return None
 
             finally:
+                self.loop_depth -= 1
                 self._pop_scope()
 
         # -----------------------------------------------------------
@@ -604,31 +626,46 @@ class Interpreter:
 
         if isinstance(node, WhileStatement):
             self._push_scope("loop")
+            self.loop_depth += 1
 
             try:
                 while bool(self._evaluate(node.condition)):
-                    try: 
+                    try:
                         for statement in node.body:
                             self._evaluate(statement)
+
                     except BreakException:
                         break
 
                     except ContinueException:
                         continue
 
-                return
+                return None
 
             finally:
-                self._pop_scope() 
+                self.loop_depth -= 1
+                self._pop_scope()
 
         # -----------------------------------------------------------
         # BREAK / CONTINUE
         # -----------------------------------------------------------
 
         if isinstance(node, BreakStatement):
+            if self.loop_depth == 0:
+                raise PlumRuntimeError(
+                    "Break statement outside loop",
+                    node
+                )
+
             raise BreakException()
 
         if isinstance(node, ContinueStatement):
+            if self.loop_depth == 0:
+                raise PlumRuntimeError(
+                    "Continue statement outside loop",
+                    node
+                )
+
             raise ContinueException()
 
         # -----------------------------------------------------------
