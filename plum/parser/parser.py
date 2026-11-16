@@ -501,7 +501,7 @@ class Parser:
             return_type = 'bool'
         elif self._match(TokenType.FLOAT):
             return_type = 'float'
-        elif self._match(TokenType.DROP):
+        elif self._match(TokenType.VOID):
             return_type = 'void'
         else:
             raise self._syntax_error("Expected return type")

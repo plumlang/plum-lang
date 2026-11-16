@@ -359,7 +359,7 @@ def test_parse_function_call():
 
 def test_parse_empty_return():
     program = parse_source(
-        "branch drop greet() { return }"
+        "branch void greet() { return }"
     )
 
     function = program.statements[0]

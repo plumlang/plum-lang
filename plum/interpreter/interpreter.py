@@ -580,8 +580,14 @@ class Interpreter:
             )
 
             if branch is not None:
-                for statement in branch:
-                    self._evaluate(statement)
+                # Each executed branch gets its own lexical block scope.
+                # Outer variables remain visible through _find_scope().
+                self._push_scope("block")
+                try:
+                    for statement in branch:
+                        self._evaluate(statement)
+                finally:
+                    self._pop_scope()
 
             return None
 

@@ -46,8 +46,8 @@ def test_return_outside_function_raises_error():
 
 def test_break_inside_function_cannot_break_caller_loop():
     source = """
-    branch drop stopLoop() {
-        break;
+    branch void stopLoop() {
+    break;
     }
 
     plant int i = 0;
@@ -55,7 +55,7 @@ def test_break_inside_function_cannot_break_caller_loop():
     while (i < 3) {
         stopLoop();
         i++;
-    }
+}   
     """
 
     with pytest.raises(RuntimeError):
@@ -64,7 +64,7 @@ def test_break_inside_function_cannot_break_caller_loop():
 
 def test_continue_inside_function_cannot_continue_caller_loop():
     source = """
-    branch drop skipLoop() {
+    branch void skipLoop() {
         continue;
     }
 

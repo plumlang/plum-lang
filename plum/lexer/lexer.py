@@ -395,6 +395,7 @@ class Lexer:
             "str": TokenType.STR,
             "bool": TokenType.BOOL,
             "float": TokenType.FLOAT,
+            "void": TokenType.VOID,
             "branch": TokenType.BRANCH,
             "return": TokenType.RETURN,
             "if": TokenType.IF,
