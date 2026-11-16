@@ -38,6 +38,7 @@ class TokenType(Enum):
     STR = auto();
     BOOL = auto();
     FLOAT = auto();
+    VOID = auto();  # void function return type
     EQUALS = auto(); # = assignment
     IDENTIFIER = auto(); # variable names
 
